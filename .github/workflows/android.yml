@@ -1,0 +1,84 @@
+name: بناء نبضات ربيع
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: إعداد JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: إعداد Gradle 8.11.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.11.1
+
+      - name: فحص صفحة الفحص (JavaScript)
+        run: |
+          python3 - <<'PY'
+          import re, pathlib, subprocess
+          html = pathlib.Path('app/src/main/assets/app/index.html').read_text(encoding='utf-8')
+          js = re.findall(r'<script>(.*?)</script>', html, re.S)[0]
+          pathlib.Path('page.js').write_text(js, encoding='utf-8')
+          subprocess.run(['node', '--check', 'page.js'], check=True)
+          # لا يجوز أن تحتوي الصفحة على روابط خارجية
+          ext = re.findall(r'(?:https?:)?//[^\s"\')]+', html)
+          assert not ext, f'روابط خارجية غير مسموحة: {ext}'
+          print('الصفحة سليمة وبلا روابط خارجية')
+          PY
+
+      - name: توقيع الإصدار (اختياري، إن وُجدت الأسرار)
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > release-key.jks
+          printf 'storeFile=../release-key.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > keystore.properties
+
+      - name: الفحص والاختبار (Lint)
+        run: gradle :app:lintRelease --no-daemon
+        continue-on-error: true
+
+      - name: بناء APK للتجربة (debug)
+        run: gradle :app:assembleDebug --no-daemon
+
+      - name: بناء AAB للنشر (release)
+        run: gradle :app:bundleRelease --no-daemon
+
+      - name: التحقق من عدم وجود صلاحية الإنترنت
+        run: |
+          MANIFEST=$(find app/build/intermediates/merged_manifests/release -name AndroidManifest.xml | head -1)
+          test -n "$MANIFEST" || { echo 'لم يُعثر على المانيفست المدمج'; exit 1; }
+          echo "المانيفست: $MANIFEST"
+          if grep -q 'android.permission.INTERNET' "$MANIFEST"; then
+            echo 'خطأ: صلاحية INTERNET موجودة' && exit 1
+          fi
+          echo 'لا توجد صلاحية INTERNET'
+
+      - name: رفع الملفات الناتجة
+        uses: actions/upload-artifact@v4
+        with:
+          name: nabadat-rabie-builds
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/bundle/release/*.aab
+            app/build/reports/lint-results-release.html
+          if-no-files-found: error

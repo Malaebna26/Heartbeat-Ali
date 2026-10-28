@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نبضات ربيع</title>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Cairo','Noto Sans Arabic','Droid Arabic Naskh',sans-serif; background:linear-gradient(135deg,#fd79a8 0%,#e84393 30%,#0984e3 100%); min-height:100vh; padding:24px 16px; color:#2d3436; }
+  .wrap { max-width:1250px; margin:0 auto; }
+  header { text-align:center; color:#fff; margin-bottom:18px; }
+  header h1 { font-size:2rem; font-weight:800; text-shadow:0 2px 10px rgba(0,0,0,.2); }
+  header p { opacity:.92; margin-top:6px; }
+  .card { background:#fff; border-radius:20px; padding:20px; box-shadow:0 15px 40px rgba(0,0,0,.15); margin-bottom:18px; }
+  .card h2 { font-size:1.15rem; color:#e84393; margin-bottom:12px; }
+  .upload { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .upload label.drop { flex:1; min-width:240px; border:2px dashed #e84393; border-radius:14px; padding:18px; text-align:center; cursor:pointer; background:#fff8fc; font-weight:700; color:#e84393; }
+  .upload label.drop:hover { background:#ffeef7; }
+  .upload input[type=file] { display:none; }
+  .upload small { color:#636e72; display:block; font-weight:400; margin-top:6px; line-height:1.6; }
+  .msg { margin-top:12px; padding:12px 14px; border-radius:12px; font-weight:600; line-height:1.7; display:none; }
+  .msg.show { display:block; }
+  .msg.ok { background:#d4f8ed; color:#006b55; }
+  .msg.err { background:#ffe3e3; color:#d63031; }
+  .msg.info { background:#e3f2ff; color:#0b5394; }
+  .preview-actions { display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; }
+  .stats { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px; }
+  .stat { border-radius:14px; padding:12px 8px; color:#fff; text-align:center; font-weight:700; font-size:.95rem; }
+  .stat b { display:block; font-size:1.7rem; font-weight:800; }
+  .s-total { background:linear-gradient(135deg,#636e72,#2d3436); }
+  .s-done { background:linear-gradient(135deg,#0984e3,#74b9ff); }
+  .s-ok { background:linear-gradient(135deg,#00b894,#55efc4); }
+  .s-follow { background:linear-gradient(135deg,#f9ca24,#f0932b); }
+  .s-refer { background:linear-gradient(135deg,#d63031,#ff7675); }
+  .toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+  .toolbar input[type=search] { flex:1; min-width:200px; padding:11px 14px; border:2px solid #dfe6e9; border-radius:12px; font-family:inherit; font-size:1rem; }
+  .btn { padding:11px 16px; border:none; border-radius:12px; font-family:inherit; font-weight:700; font-size:.95rem; cursor:pointer; color:#fff; background:linear-gradient(135deg,#e84393,#0984e3); transition:transform .2s; }
+  .btn:hover { transform:translateY(-1px); }
+  .btn.green { background:linear-gradient(135deg,#00b894,#55efc4); }
+  .btn.gray { background:#636e72; }
+  .btn.red { background:#d63031; }
+  .table-wrap { overflow:auto; max-height:68vh; border-radius:14px; border:1px solid #eee; }
+  table { width:100%; border-collapse:collapse; font-size:.92rem; min-width:1000px; }
+  th, td { padding:6px; border-bottom:1px solid #eee; text-align:center; vertical-align:middle; }
+  th { background:#f8f9fa; color:#636e72; font-weight:700; position:sticky; top:0; z-index:2; }
+  td.name { text-align:right; font-weight:700; min-width:210px; }
+  td.g { color:#636e72; font-size:.85rem; }
+  td.empty { padding:40px; color:#636e72; font-weight:600; }
+  tr.extra td { background:#fff8fc; }
+  tr.hidden { display:none; }
+  input[type=number] { width:76px; padding:7px 6px; border:2px solid #dfe6e9; border-radius:10px; font-family:inherit; font-size:.95rem; text-align:center; background:#fafbff; }
+  input.txt { width:100%; min-width:160px; padding:7px 8px; border:2px solid #dfe6e9; border-radius:10px; font-family:inherit; font-size:.95rem; background:#fafbff; }
+  select { padding:6px; border:2px solid #dfe6e9; border-radius:10px; font-family:inherit; font-size:.88rem; background:#fff; }
+  input[type=checkbox] { width:18px; height:18px; accent-color:#d63031; cursor:pointer; }
+  input:focus, select:focus { outline:none; border-color:#e84393; box-shadow:0 0 0 3px rgba(232,67,147,.15); }
+  .badge { display:inline-block; padding:4px 10px; border-radius:20px; font-weight:700; font-size:.82rem; color:#fff; white-space:nowrap; }
+  .badge.ok { background:#00b894; }
+  .badge.follow { background:#f0932b; }
+  .badge.refer { background:#d63031; }
+  .badge.incomplete { background:#b2bec3; color:#2d3436; }
+  .badge.none { background:none; color:#b2bec3; font-weight:400; }
+  .flags { font-size:.75rem; color:#636e72; margin-top:3px; line-height:1.5; }
+  .rules { background:#f1f2f6; border-radius:14px; padding:12px 14px; font-size:.88rem; line-height:1.8; margin-top:14px; }
+  .rules b { color:#e84393; }
+  .note { background:#ffeaa7; border-radius:12px; padding:12px; font-size:.88rem; line-height:1.7; margin-top:10px; }
+  @media (max-width:850px) { .stats { grid-template-columns:repeat(2,1fr); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="msg err show" id="jsWarn">⚠️ المتصفح لم يشغّل الصفحة. افتحها بمتصفح Chrome محدّث، أو حدّث التطبيق الحالي.</div>
+  <header>
+    <h1>🫀 فحص نبضات تلاميذ القسم</h1>
+    <p>ارفع قائمة التلاميذ، ثم أدخل القياسات مباشرة في الجدول</p>
+  </header>
+
+  <section class="card">
+    <h2>📂 قائمة التلاميذ</h2>
+    <div class="upload">
+      <label class="drop" for="file">
+        ⬆️ اختر ملف القائمة
+        <small>يقبل Excel (.xlsx) أو CSV. يبحث عن الأعمدة بعناوينها: «اللقب والاسم»، «الجنس»، «تاريخ الميلاد»، ويقرأ كل الكشوف الموجودة في الملف.</small>
+      </label>
+    </div>
+    <p style="margin-top:12px"><input type="file" id="file" accept=".xlsx,.csv"></p>
+    <details style="margin-top:12px">
+      <summary style="cursor:pointer;font-weight:700;color:#e84393">أو الصق الجدول مباشرة (إذا لم يعمل رفع الملف)</summary>
+      <p style="font-size:.88rem;color:#636e72;margin:8px 0">افتح الملف في Excel، حدد الجدول كاملاً (بما فيه العناوين)، انسخه (Ctrl+C) ثم الصقه هنا (Ctrl+V):</p>
+      <textarea id="pasteBox" rows="5" style="width:100%;padding:10px;border:2px solid #dfe6e9;border-radius:12px;font-family:inherit"></textarea>
+      <div class="preview-actions"><button class="btn" id="parsePaste">🔍 تحليل الجدول الملصوق</button></div>
+    </details>
+    <div class="msg" id="importMsg"></div>
+    <div id="previewBox" style="display:none">
+      <div class="msg info show" id="previewText"></div>
+      <div class="preview-actions">
+        <button class="btn green" id="approve">✅ اعتماد القائمة</button>
+        <button class="btn gray" id="cancelPreview">إلغاء</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="stats">
+      <div class="stat s-total">التلاميذ<b id="sTotal">0</b></div>
+      <div class="stat s-done">تم قياسهم<b id="sDone">0</b></div>
+      <div class="stat s-ok">نتيجة طبيعية<b id="sOk">0</b></div>
+      <div class="stat s-follow">متابعة<b id="sFollow">0</b></div>
+      <div class="stat s-refer">إحالة للطبيب<b id="sRefer">0</b></div>
+    </div>
+
+    <div class="toolbar">
+      <input type="search" id="search" placeholder="🔎 ابحث باسم التلميذ...">
+      <button class="btn" id="addExtra">➕ تلميذ غير مسجل</button>
+      <button class="btn green" id="csv">⬇️ تصدير CSV</button>
+      <button class="btn gray" id="clear">🗑️ مسح القياسات</button>
+      <button class="btn red" id="removeList">🗑️ حذف القائمة</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>اللقب والاسم</th>
+            <th>الجنس</th>
+            <th>العمر</th>
+            <th>قبل النشاط</th>
+            <th>فور التوقف</th>
+            <th>بعد دقيقة</th>
+            <th>طريقة التوقف</th>
+            <th>أعراض</th>
+            <th>النتيجة</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+
+    <div class="rules">
+      <b>قواعد الفرز:</b><br>
+      • <b>نبض الراحة:</b> الحدود التقريبية 70–120 للأعمار حتى 12 سنة، و60–100 بعدها.<br>
+      • <b>التعافي:</b> الانخفاض في الدقيقة الأولى يُعتبر ضعيفاً إذا كان 12 bpm أو أقل مع التهدئة، أو 18 bpm أو أقل مع التوقف الفوري.<br>
+      • <b>الأعراض:</b> تعني إحالة فورية بصرف النظر عن الأرقام.<br>
+      • <b>نتيجة طبيعية:</b> لا مؤشرات. &nbsp; <b>متابعة:</b> مؤشر واحد، وتُعاد القياسات بعد أسبوع.<br>
+      • <b>إحالة للطبيب:</b> أعراض، أو مؤشران معاً.
+    </div>
+    <div class="note">
+      ⚠️ هذه أداة فرز أولي وليست تشخيصاً، ولا تُستعمل الأرقام وحدها لوصف تلميذ بأنه مريض. العتبات مأخوذة من دراسات على البالغين وتقديرات تقريبية للأطفال، ويجب أن يعتمدها الطبيب المختص قبل الاستعمال الرسمي.
+    </div>
+    <div class="note" style="background:#dfe6e9">
+      🔒 القائمة والقياسات تُحفظ في متصفح هذا الجهاز فقط، ولا يُرسل الملف أي بيانات إلى أي خادم. قائمة التلاميذ تحتوي أسماء الأطفال وتواريخ ميلادهم، فلا تشاركها. صدّر ملف CSV للاحتفاظ بنسخة. العمر محسوب من تاريخ الميلاد بتاريخ اليوم، ويمكن تعديله يدوياً.
+    </div>
+  </section>
+</div>
+
+<script>
+  var $ = function (id) { return document.getElementById(id); };
+  $('jsWarn').style.display = 'none';
+  var STORE_KEY = 'pupilsCheckList_v2';
+  const MEAS = ['pre', 'post', 'rec', 'protocol', 'symptoms', 'ageEdited'];
+  const LABELS = { ok: 'نتيجة طبيعية', follow: 'متابعة', refer: 'إحالة للطبيب', incomplete: 'غير مكتمل' };
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const norm = s => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
+
+  let pupils = [];
+  let pendingList = null;
+
+  // ===== العمر والبيانات =====
+  function ageFromDob(dob) {
+    if (!dob) return null;
+    const today = new Date();
+    const b = new Date(dob + 'T00:00:00');
+    let a = today.getFullYear() - b.getFullYear();
+    const m = today.getMonth() - b.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < b.getDate())) a--;
+    return a;
+  }
+
+  function newPupil(name, g, dob, extra) {
+    return {
+      name, g, dob, age: ageFromDob(dob), ageEdited: false,
+      pre: '', post: '', rec: '', protocol: 'cooldown', symptoms: false, extra
+    };
+  }
+
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(pupils)); } catch (e) {}
+  }
+
+  function load() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+      if (!Array.isArray(saved)) return;
+      pupils = saved.map(s => {
+        const p = { ...newPupil(s.name || '', s.g || '', s.dob || '', !!s.extra), ...s };
+        if (!p.ageEdited && p.dob) p.age = ageFromDob(p.dob); // تحديث العمر بتاريخ اليوم
+        return p;
+      });
+    } catch (e) {}
+  }
+
+  // ===== قراءة الملفات (بدون مكتبات خارجية) =====
+  function colIndex(ref) {
+    const letters = /^([A-Z]+)/.exec(ref)[1];
+    let n = 0;
+    for (const ch of letters) n = n * 26 + (ch.charCodeAt(0) - 64);
+    return n - 1;
+  }
+
+  async function inflateRaw(data) {
+    if (!window.DecompressionStream) throw new Error('المتصفح لا يدعم فك ضغط الملفات، استعمل متصفحاً حديثاً أو احفظ الملف بصيغة CSV.');
+    const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+
+  async function unzipAll(buf) {
+    const u8 = new Uint8Array(buf);
+    const dv = new DataView(buf);
+    let eocd = -1;
+    for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) {
+      if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) throw new Error('الملف ليس xlsx صالحاً.');
+    const count = dv.getUint16(eocd + 10, true);
+    let p = dv.getUint32(eocd + 16, true);
+    const files = {};
+    for (let k = 0; k < count; k++) {
+      if (dv.getUint32(p, true) !== 0x02014b50) break;
+      const method = dv.getUint16(p + 10, true);
+      const csize = dv.getUint32(p + 20, true);
+      const nlen = dv.getUint16(p + 28, true);
+      const elen = dv.getUint16(p + 30, true);
+      const clen = dv.getUint16(p + 32, true);
+      const loff = dv.getUint32(p + 42, true);
+      const name = new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nlen));
+      const start = loff + 30 + dv.getUint16(loff + 26, true) + dv.getUint16(loff + 28, true);
+      const data = u8.subarray(start, start + csize);
+      files[name] = method === 0 ? data : await inflateRaw(data);
+      p += 46 + nlen + elen + clen;
+    }
+    return files;
+  }
+
+  async function readXlsx(buf) {
+    const files = await unzipAll(buf);
+    const dec = new TextDecoder();
+    const xml = name => files[name] ? new DOMParser().parseFromString(dec.decode(files[name]), 'application/xml') : null;
+    const ss = [];
+    const sst = xml('xl/sharedStrings.xml');
+    if (sst) for (const si of Array.from(sst.getElementsByTagName('si'))) {
+      ss.push(Array.from(si.getElementsByTagName('t')).map(t => t.textContent).join(''));
+    }
+    const names = Object.keys(files)
+      .filter(n => /^xl\/worksheets\/sheet\d+\.xml$/.test(n))
+      .sort((a, b) => Number(a.match(/\d+/)[0]) - Number(b.match(/\d+/)[0]));
+    const sheets = [];
+    for (const n of names) {
+      const doc = xml(n);
+      const grid = [];
+      for (const row of Array.from(doc.getElementsByTagName('row'))) {
+        const r = Number(row.getAttribute('r')) - 1;
+        grid[r] = grid[r] || [];
+        for (const c of Array.from(row.getElementsByTagName('c'))) {
+          const ci = colIndex(c.getAttribute('r'));
+          const t = c.getAttribute('t');
+          const v = c.getElementsByTagName('v')[0];
+          let val = '';
+          if (t === 's') val = v ? (ss[Number(v.textContent)] || '') : '';
+          else if (t === 'inlineStr') val = Array.from(c.getElementsByTagName('t')).map(x => x.textContent).join('');
+          else if (v) {
+            const x = v.textContent;
+            val = (t === 'str' || t === 'e' || t === 'b') ? x : (x.trim() !== '' && !isNaN(x) ? Number(x) : x);
+          }
+          grid[r][ci] = val;
+        }
+      }
+      sheets.push(Array.from(grid, row => row ? Array.from({ length: row.length }, (_, i) => (row[i] === undefined ? '' : row[i])) : []));
+    }
+    return sheets;
+  }
+
+  function readCsv(text) {
+    text = text.replace(/^﻿/, '');
+    const rows = [];
+    let row = [], cell = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (q) {
+        if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+        else cell += ch;
+      } else if (ch === '"') q = true;
+      else if (ch === ',' || ch === ';') { row.push(cell); cell = ''; }
+      else if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+      else if (ch !== '\r') cell += ch;
+    }
+    if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+    return [rows];
+  }
+
+  // ===== تحليل القائمة: يبحث عن رؤوس الأعمدة في كل الكشوف =====
+  const EXCLUDE = /المجموع|مجموع|الذكور|الإناث|إمضاء|جدد|معيدين|قوائم|الجمهورية|وزارة|مديرية|الموسم|الجنس|تاريخ|اللقب|الاسم/;
+
+  const NAME_RE = /اللقب|الاسم|اسم|لقب|nom|name/i;
+  const GENDER_RE = /الجنس|النوع|sexe|gender|sex/i;
+  const DOB_RE = /الميلاد|الازدياد|ازدياد|الولادة|ولادة|ميلاد|naissance|birth/i;
+
+  function parseGender(v) {
+    const s = norm(v);
+    if (/^(ذكر|ذكور|m|male)/i.test(s)) return 'm';
+    if (/^(أنثى|انثى|أنثي|انثي|إناث|اناث|f|female)/i.test(s)) return 'f';
+    return '';
+  }
+
+  function isoOf(y, mo, d) {
+    if (y < 1990 || y > 2035 || mo < 1 || mo > 12 || d < 1 || d > 31) return '';
+    return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  }
+
+  function parseDob(v) {
+    if (v === '' || v === null || v === undefined) return '';
+    if (typeof v === 'number' || /^\d{5}$/.test(norm(v))) {
+      const days = Math.round(Number(v));
+      if (days <= 0) return '';
+      return new Date(Date.UTC(1899, 11, 30) + days * 86400000).toISOString().slice(0, 10);
+    }
+    const s = norm(v);
+    let m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/);
+    if (m) return isoOf(+m[1], +m[2], +m[3]);
+    m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/);
+    if (m) return isoOf(+m[3], +m[2], +m[1]);
+    return '';
+  }
+
+  function parseRoster(sheets) {
+    const list = [], seen = new Set();
+    let tables = 0, tablesNoDob = 0, tablesNoGender = 0;
+    const seenHeaders = [];
+    for (const A of sheets) {
+      A.slice(0, 80).forEach(row => row.forEach(cell => {
+        const t = norm(cell);
+        if (t && t.length < 60 && !seenHeaders.includes(t) && seenHeaders.length < 15) seenHeaders.push(t);
+      }));
+      // رؤوس الجداول: خلية اسم قصيرة في الصف نفسه يوجد بجانبها عمود الجنس أو تاريخ الميلاد
+      const heads = [];
+      A.forEach((row, r) => row.forEach((cell, c) => {
+        const t = norm(cell);
+        if (!t || t.length > 60 || !NAME_RE.test(t) || /مديرية|وزارة|الجمهورية|قوائم/.test(t)) return;
+        const nearest = re => {
+          let best = -1, bd = Infinity;
+          row.forEach((x, cc) => {
+            if (re.test(norm(x))) { const d = Math.abs(cc - c); if (d < bd) { bd = d; best = cc; } }
+          });
+          return best;
+        };
+        const gc = nearest(GENDER_RE), dc = nearest(DOB_RE);
+        if (gc < 0 && dc < 0) return;
+        heads.push({ r, c, gc, dc });
+      }));
+      heads.forEach((h, idx) => {
+        tables++;
+        if (h.dc < 0) tablesNoDob++;
+        if (h.gc < 0) tablesNoGender++;
+        const nextR = (heads.slice(idx + 1).find(x => x.c === h.c && x.r > h.r) || { r: A.length }).r;
+        for (let r = h.r + 1; r < nextR; r++) {
+          const rowR = A[r] || [];
+          const name = norm(rowR[h.c]);
+          if (name.length < 3 || !/[A-Za-z\u0600-\u06FF]/.test(name) || EXCLUDE.test(name)) continue;
+          const g = h.gc >= 0 ? parseGender(rowR[h.gc]) : '';
+          const dob = h.dc >= 0 ? parseDob(rowR[h.dc]) : '';
+          const key = name + '|' + g + '|' + dob;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          list.push([name, g, dob]);
+        }
+      });
+    }
+    return { list, tables, tablesNoDob, tablesNoGender, seenHeaders };
+  }
+
+  // ===== الحساب =====
+  function restRange(age) { return age <= 12 ? [70, 120] : [60, 100]; }
+  function num(v) { return v === '' || v === null || v === undefined ? null : Number(v); }
+
+  function classify(p) {
+    const anyValue = p.pre !== '' || p.post !== '' || p.rec !== '' || p.symptoms;
+    if (!anyValue) return { status: null, flags: [] };
+    if (p.symptoms) return { status: 'refer', flags: ['ظهرت أعراض: إحالة فورية'] };
+
+    const pre = num(p.pre), post = num(p.post), rec = num(p.rec);
+    if (pre === null || post === null || rec === null) return { status: 'incomplete', flags: ['أكمل القياسات الثلاثة'] };
+    if (p.age === null || p.age === '' || p.age === undefined) return { status: 'incomplete', flags: ['أدخل عمر التلميذ'] };
+    if (rec > post) return { status: 'incomplete', flags: ['تحقق من القياس: النبض بعد دقيقة أكبر من فور التوقف'] };
+
+    const strong = [], weak = [];
+    const [lo, hi] = restRange(Number(p.age));
+    if (pre < lo || pre > hi) strong.push(`نبض الراحة ${pre} خارج المعتاد (${lo}–${hi})`);
+
+    const drop = post - rec;
+    const th = p.protocol === 'abrupt' ? 18 : 12;
+    if (drop <= th) weak.push(`تعافٍ ضعيف: انخفاض ${drop} bpm (العتبة ${th})`);
+
+    let status;
+    if (strong.length && weak.length) status = 'refer';
+    else if (strong.length || weak.length) status = 'follow';
+    else status = 'ok';
+    return { status, flags: [...strong, ...weak] };
+  }
+
+  // ===== الجدول =====
+  function rowHtml(p, i) {
+    const gender = p.g === 'm' ? 'ذكر' : p.g === 'f' ? 'أنثى' : '';
+    const nameCell = p.extra
+      ? `<input class="txt" data-f="name" value="${esc(p.name)}" placeholder="اسم التلميذ">`
+      : esc(p.name);
+    return `<tr data-i="${i}" class="${p.extra ? 'extra' : ''}">
+      <td class="g">${i + 1}</td>
+      <td class="name">${nameCell}</td>
+      <td class="g">${gender}</td>
+      <td><input type="number" data-f="age" min="6" max="18" value="${p.age == null ? '' : p.age}"></td>
+      <td><input type="number" data-f="pre" min="30" max="200" value="${p.pre}"></td>
+      <td><input type="number" data-f="post" min="30" max="240" value="${p.post}"></td>
+      <td><input type="number" data-f="rec" min="30" max="240" value="${p.rec}"></td>
+      <td><select data-f="protocol">
+        <option value="cooldown" ${p.protocol !== 'abrupt' ? 'selected' : ''}>تهدئة بالمشي</option>
+        <option value="abrupt" ${p.protocol === 'abrupt' ? 'selected' : ''}>توقف فوري</option>
+      </select></td>
+      <td><input type="checkbox" data-f="symptoms" ${p.symptoms ? 'checked' : ''}></td>
+      <td class="res"></td>
+    </tr>`;
+  }
+
+  function refreshRow(i) {
+    const p = pupils[i];
+    const tr = document.querySelector(`#rows tr[data-i="${i}"]`);
+    if (!tr) return;
+    const r = classify(p);
+    const cell = tr.querySelector('.res');
+    cell.innerHTML = !r.status
+      ? '<span class="badge none">—</span>'
+      : `<span class="badge ${r.status}">${LABELS[r.status]}</span>` +
+        (r.flags.length ? `<div class="flags">${r.flags.map(esc).join('<br>')}</div>` : '');
+  }
+
+  function updateStats() {
+    const c = { total: pupils.length, done: 0, ok: 0, follow: 0, refer: 0 };
+    pupils.forEach(p => {
+      const s = classify(p).status;
+      if (s === 'ok' || s === 'follow' || s === 'refer') { c.done++; c[s]++; }
+    });
+    $('sTotal').textContent = c.total;
+    $('sDone').textContent = c.done;
+    $('sOk').textContent = c.ok;
+    $('sFollow').textContent = c.follow;
+    $('sRefer').textContent = c.refer;
+  }
+
+  function applySearch() {
+    const q = $('search').value.trim();
+    document.querySelectorAll('#rows tr').forEach(tr => {
+      const p = pupils[Number(tr.dataset.i)];
+      tr.classList.toggle('hidden', q !== '' && !(p && p.name.includes(q)));
+    });
+  }
+
+  function renderAll() {
+    if (pupils.length === 0) {
+      $('rows').innerHTML = '<tr><td class="empty" colspan="10">لا توجد قائمة بعد. ارفع ملف قائمة التلاميذ من الأعلى، أو أضف تلميذاً يدوياً.</td></tr>';
+    } else {
+      $('rows').innerHTML = pupils.map((p, i) => rowHtml(p, i)).join('');
+      pupils.forEach((_, i) => refreshRow(i));
+    }
+    updateStats();
+    applySearch();
+    save();
+  }
+
+  function onChange(e) {
+    const el = e.target;
+    const f = el.dataset.f;
+    const tr = el.closest('tr');
+    if (!f || !tr) return;
+    const p = pupils[Number(tr.dataset.i)];
+    if (!p) return;
+
+    if (f === 'symptoms') p.symptoms = el.checked;
+    else if (f === 'protocol') p.protocol = el.value;
+    else if (f === 'age') { p.age = el.value === '' ? null : Number(el.value); p.ageEdited = true; }
+    else if (f === 'name') p.name = el.value;
+    else p[f] = el.value;
+
+    refreshRow(Number(tr.dataset.i));
+    updateStats();
+    applySearch();
+    save();
+  }
+
+  $('rows').addEventListener('input', onChange);
+  $('rows').addEventListener('change', onChange);
+
+  $('rows').addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || !e.target.dataset.f) return;
+    e.preventDefault();
+    const f = e.target.dataset.f;
+    let next = e.target.closest('tr').nextElementSibling;
+    while (next && next.classList.contains('hidden')) next = next.nextElementSibling;
+    const el = next && next.querySelector(`[data-f="${f}"]`);
+    if (el) { el.focus(); if (el.select) el.select(); }
+  });
+
+  $('search').addEventListener('input', applySearch);
+
+  $('addExtra').addEventListener('click', () => {
+    pupils.push(newPupil('', '', '', true));
+    renderAll();
+    const last = document.querySelector('#rows tr:last-child [data-f="name"]');
+    if (last) last.focus();
+  });
+
+  // ===== رفع القائمة =====
+  function showMsg(text, kind) {
+    const m = $('importMsg');
+    m.textContent = text;
+    m.className = 'msg show ' + kind;
+  }
+
+  function showPreview(res, fileName) {
+    const males = res.list.filter(x => x[1] === 'm').length;
+    const females = res.list.filter(x => x[1] === 'f').length;
+    const noDob = res.list.filter(x => !x[2]).length;
+    const sample = res.list.slice(0, 5).map(x => x[0]).join('، ');
+    $('previewText').innerHTML =
+      `وجدت <b>${res.list.length}</b> تلميذاً في ${res.tables} جدول من الملف «${esc(fileName)}» ` +
+      `(${males} ذكر، ${females} أنثى).` +
+      (res.tablesNoDob ? `<br>⚠️ لم أجد عمود تاريخ الميلاد، لذلك أدخل الأعمار يدوياً.` : (noDob ? `<br>⚠️ ${noDob} تلميذ بدون تاريخ ميلاد، أدخل عمره يدوياً.` : '')) +
+      (res.tablesNoGender ? `<br>⚠️ لم أجد عمود الجنس.` : '') +
+      `<br>أمثلة: ${esc(sample)} ...`;
+    $('previewBox').style.display = 'block';
+  }
+
+  window.addEventListener('error', e => showMsg('خطأ في الصفحة: ' + e.message, 'err'));
+
+  function analyzeSheets(sheets, sourceName) {
+    pendingList = null;
+    $('previewBox').style.display = 'none';
+    {
+      const res = parseRoster(sheets);
+      if (!res.list.length) {
+        const found = res.seenHeaders.length ? `<br>العناوين التي وجدتها في الملف: ${res.seenHeaders.map(esc).join(' | ')}` : '<br>لم أجد أي نص في الملف.';
+        $('importMsg').innerHTML = 'لم أجد جدولاً للتلاميذ. يجب أن يحتوي الملف على عمود عنوانه «اللقب والاسم» أو «الاسم»، بجانب عمود «الجنس» أو «تاريخ الميلاد».' + found;
+        $('importMsg').className = 'msg show err';
+        return;
+      }
+      pendingList = res;
+      applyPending(sourceName);
+    }
+  }
+
+  $('file').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    showMsg('جارٍ قراءة الملف...', 'info');
+    try {
+      const name = file.name.toLowerCase();
+      let sheets;
+      if (name.endsWith('.csv')) sheets = readCsv(await file.text());
+      else if (name.endsWith('.xlsx')) sheets = await readXlsx(await file.arrayBuffer());
+      else return showMsg('صيغة الملف غير مدعومة. احفظ الملف بصيغة Excel (.xlsx) أو CSV، أو الصق الجدول مباشرة.', 'err');
+      analyzeSheets(sheets, file.name);
+    } catch (err) {
+      showMsg('تعذر قراءة الملف: ' + err.message + ' — جرّب لصق الجدول مباشرة من الخيار أسفل الخانة.', 'err');
+    }
+    e.target.value = '';
+  });
+
+  $('parsePaste').addEventListener('click', () => {
+    const text = $('pasteBox').value;
+    if (!text.trim()) return showMsg('الصق الجدول في الخانة أولاً.', 'err');
+    const sheets = text.includes('\t')
+      ? [text.replace(/\r/g, '').split('\n').filter(l => l.trim() !== '').map(l => l.split('\t'))]
+      : readCsv(text);
+    try { analyzeSheets(sheets, 'الجدول الملصوق'); }
+    catch (err) { showMsg('تعذر تحليل الجدول: ' + err.message, 'err'); }
+  });
+
+  // تطبيق القائمة مباشرة، مع تأكيد فقط إذا كانت هناك قياسات مسجلة في القائمة الحالية
+  function applyPending(sourceName) {
+    if (!pendingList) return;
+    const hasData = pupils.some(p => p.pre !== '' || p.post !== '' || p.rec !== '' || p.symptoms);
+    if (hasData && !confirm('ستُستبدل القائمة الحالية، وتفقد القياسات المسجلة فيها. هل تريد المتابعة؟')) {
+      showMsg('لم تُستبدل القائمة.', 'info');
+      pendingList = null;
+      return;
+    }
+    const n = pendingList.list.length;
+    pupils = pendingList.list.map(([name, g, dob]) => newPupil(name, g, dob, false));
+    pendingList = null;
+    $('previewBox').style.display = 'none';
+    showMsg(`تم تحميل ${n} تلميذاً من «${sourceName}» وظهروا في الجدول أدناه.`, 'ok');
+    renderAll();
+  }
+
+  $('approve').addEventListener('click', () => applyPending('القائمة'));
+
+  $('cancelPreview').addEventListener('click', () => {
+    pendingList = null;
+    $('previewBox').style.display = 'none';
+  });
+
+  // ===== تصدير ومسح =====
+  $('csv').addEventListener('click', () => {
+    const header = ['الاسم', 'الجنس', 'العمر', 'قبل النشاط', 'فور التوقف', 'بعد دقيقة', 'طريقة التوقف', 'أعراض', 'النتيجة', 'الملاحظات'];
+    const lines = pupils.map(p => {
+      const r = classify(p);
+      const g = p.g === 'm' ? 'ذكر' : p.g === 'f' ? 'أنثى' : '';
+      return [
+        p.name, g, (p.age == null ? '' : p.age), p.pre, p.post, p.rec,
+        p.protocol === 'abrupt' ? 'توقف فوري' : 'تهدئة',
+        p.symptoms ? 'نعم' : 'لا',
+        r.status ? LABELS[r.status] : '',
+        r.flags.join(' | ')
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+    });
+    const csv = '﻿' + [header.map(h => `"${h}"`).join(','), ...lines].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'فحص_النبضات.csv';
+    a.click();
+  });
+
+  $('clear').addEventListener('click', () => {
+    if (!confirm('سيتم مسح جميع القياسات وتبقى أسماء التلاميذ. هل تريد المتابعة؟')) return;
+    pupils.forEach(p => { p.pre = ''; p.post = ''; p.rec = ''; p.symptoms = false; p.protocol = 'cooldown'; });
+    renderAll();
+  });
+
+  $('removeList').addEventListener('click', () => {
+    if (!confirm('سيتم حذف القائمة وجميع القياسات من هذا الجهاز. هل أنت متأكد؟')) return;
+    pupils = [];
+    renderAll();
+    showMsg('تم حذف القائمة.', 'info');
+  });
+
+  load();
+  renderAll();
+</script>
+</body>
+</html>
