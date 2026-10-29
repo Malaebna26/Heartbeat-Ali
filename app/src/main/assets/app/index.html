@@ -8,21 +8,34 @@
   * { box-sizing:border-box; margin:0; padding:0; }
   body { font-family:'Cairo','Noto Sans Arabic','Droid Arabic Naskh',sans-serif; background:linear-gradient(135deg,#fd79a8 0%,#e84393 30%,#0984e3 100%); min-height:100vh; padding:24px 16px; color:#2d3436; }
   .wrap { max-width:1250px; margin:0 auto; }
+  .topbar { display:flex; justify-content:flex-start; margin-bottom:6px; }
+  .lang-btn { background:rgba(255,255,255,.25); color:#fff; border:2px solid rgba(255,255,255,.6); border-radius:20px; padding:6px 14px; font-family:inherit; font-weight:700; cursor:pointer; }
+  .lang-btn:hover { background:rgba(255,255,255,.4); }
   header { text-align:center; color:#fff; margin-bottom:18px; }
-  header h1 { font-size:2rem; font-weight:800; text-shadow:0 2px 10px rgba(0,0,0,.2); }
-  header p { opacity:.92; margin-top:6px; }
+  header h1 { font-size:2rem; font-weight:800; text-shadow:0 2px 10px rgba(0,0,0,.2); display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center; }
+  header p { color:rgba(255,255,255,.92); margin-top:6px; font-weight:600; }
+  .tabs { display:flex; gap:10px; margin-bottom:18px; }
+  .tab { flex:1; padding:14px; border:none; border-radius:16px; font-family:inherit; font-weight:700; font-size:1.02rem; background:#fff; color:#6c5ce7; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.12); transition:transform .2s; }
+  .tab:hover { transform:translateY(-2px); }
+  .tab.active { background:linear-gradient(135deg,#e84393,#0984e3); color:#fff; }
   .card { background:#fff; border-radius:20px; padding:20px; box-shadow:0 15px 40px rgba(0,0,0,.15); margin-bottom:18px; }
-  .card h2 { font-size:1.15rem; color:#e84393; margin-bottom:12px; }
+  .card h2 { font-size:1.15rem; color:#e84393; margin-bottom:12px; font-weight:800; }
+  .card h3 { font-size:1rem; color:#636e72; margin:10px 0 6px; }
+  .center { text-align:center; justify-content:center; }
+  .field { margin-bottom:12px; }
+  .field label { display:block; font-weight:700; margin-bottom:6px; font-size:.95rem; }
+  .field input { width:100%; padding:10px; border:2px solid #dfe6e9; border-radius:12px; font-family:inherit; font-size:1rem; }
   .upload { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
   .upload label.drop { flex:1; min-width:240px; border:2px dashed #e84393; border-radius:14px; padding:18px; text-align:center; cursor:pointer; background:#fff8fc; font-weight:700; color:#e84393; }
   .upload label.drop:hover { background:#ffeef7; }
-  .upload input[type=file] { display:none; }
+  .upload label.drop span { display:block; }
   .upload small { color:#636e72; display:block; font-weight:400; margin-top:6px; line-height:1.6; }
   .msg { margin-top:12px; padding:12px 14px; border-radius:12px; font-weight:600; line-height:1.7; display:none; }
   .msg.show { display:block; }
   .msg.ok { background:#d4f8ed; color:#006b55; }
   .msg.err { background:#ffe3e3; color:#d63031; }
   .msg.info { background:#e3f2ff; color:#0b5394; }
+  #appMsg { position:sticky; top:8px; z-index:20; box-shadow:0 6px 18px rgba(0,0,0,.15); margin-top:0; margin-bottom:14px; }
   .preview-actions { display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; }
   .stats { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px; }
   .stat { border-radius:14px; padding:12px 8px; color:#fff; text-align:center; font-weight:700; font-size:.95rem; }
@@ -39,12 +52,15 @@
   .btn.green { background:linear-gradient(135deg,#00b894,#55efc4); }
   .btn.gray { background:#636e72; }
   .btn.red { background:#d63031; }
+  .mini { padding:4px 8px; border:2px solid #dfe6e9; border-radius:10px; background:#fafbff; font-family:inherit; font-size:.9rem; font-weight:700; cursor:pointer; margin:2px; }
+  .mini:hover { border-color:#e84393; }
   .table-wrap { overflow:auto; max-height:68vh; border-radius:14px; border:1px solid #eee; }
-  table { width:100%; border-collapse:collapse; font-size:.92rem; min-width:1000px; }
+  table { width:100%; border-collapse:collapse; font-size:.92rem; min-width:1100px; }
   th, td { padding:6px; border-bottom:1px solid #eee; text-align:center; vertical-align:middle; }
   th { background:#f8f9fa; color:#636e72; font-weight:700; position:sticky; top:0; z-index:2; }
   td.name { text-align:right; font-weight:700; min-width:210px; }
   td.g { color:#636e72; font-size:.85rem; }
+  td.acts { white-space:nowrap; }
   td.empty { padding:30px 20px; color:#636e72; font-weight:600; text-align:start; white-space:normal; line-height:1.8; }
   td.empty .empty-box { max-width:300px; }
   tr.extra td { background:#fff8fc; }
@@ -54,6 +70,7 @@
   select { padding:6px; border:2px solid #dfe6e9; border-radius:10px; font-family:inherit; font-size:.88rem; background:#fff; }
   input[type=checkbox] { width:18px; height:18px; accent-color:#d63031; cursor:pointer; }
   input:focus, select:focus { outline:none; border-color:#e84393; box-shadow:0 0 0 3px rgba(232,67,147,.15); }
+  .tab:focus-visible, .btn:focus-visible, .mini:focus-visible, .lang-btn:focus-visible, select:focus-visible, input:focus-visible { outline:3px solid #fdcb6e; outline-offset:2px; }
   .badge { display:inline-block; padding:4px 10px; border-radius:20px; font-weight:700; font-size:.82rem; color:#fff; white-space:nowrap; }
   .badge.ok { background:#00b894; }
   .badge.follow { background:#f0932b; }
@@ -64,15 +81,47 @@
   .rules { background:#f1f2f6; border-radius:14px; padding:12px 14px; font-size:.88rem; line-height:1.8; margin-top:14px; }
   .rules b { color:#e84393; }
   .note { background:#ffeaa7; border-radius:12px; padding:12px; font-size:.88rem; line-height:1.7; margin-top:10px; }
+  .timer-card { text-align:center; }
+  .timer-display { font-size:4.5rem; font-weight:800; line-height:1.1; margin:6px 0 4px; font-variant-numeric:tabular-nums; color:#e84393; }
+  .timer-display.running { color:#0984e3; }
+  .timer-display.done { color:#00b894; animation:tpulse 1s infinite; }
+  @keyframes tpulse { 50% { transform:scale(1.06); } }
+  .timer-actions { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
+  .timer-actions .btn { flex:0 1 200px; }
+  #tMsg { margin-top:10px; }
+  .solo-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+  .solo-grid label { display:block; font-weight:700; margin-bottom:4px; font-size:.92rem; }
+  .solo-grid input, .solo-grid select { width:100%; padding:10px; border:2px solid #dfe6e9; border-radius:12px; font-family:inherit; font-size:1rem; }
+  .solo-result { margin-top:16px; text-align:center; }
+  .solo-result .badge { font-size:1.1rem; padding:8px 16px; }
+  .solo-result .flags { margin-top:8px; }
+  .advanced summary, .sub summary { cursor:pointer; font-weight:800; color:#e84393; font-size:1.05rem; }
+  .adv-body { margin-top:12px; }
+  .sub { margin:10px 0; }
+  .sub textarea { width:100%; padding:10px; border:2px solid #dfe6e9; border-radius:12px; font-family:inherit; margin-top:8px; }
+  .info-card { text-align:center; }
+  .info-card h2 { justify-content:center; }
+  .info-links { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .info-links a { text-decoration:none; color:#fff; padding:11px 16px; border-radius:12px; background:linear-gradient(135deg,#e84393,#0984e3); font-weight:700; }
+  .fb-link { display:inline-flex; align-items:center; gap:10px; text-decoration:none; color:#1877F2; font-weight:700; margin-top:14px; }
+  .dev-credit { margin:6px auto 0; text-align:center; color:#fff; padding:16px 20px; border-radius:18px; background:rgba(255,255,255,.18); backdrop-filter:blur(4px); box-shadow:0 10px 30px rgba(0,0,0,.15); max-width:360px; }
+  .dev-credit a { color:inherit; text-decoration:none; display:block; }
+  .dev-credit a:hover .dev-name { text-decoration:underline; }
+  .dev-credit .dev-name { font-size:1.5rem; font-weight:800; letter-spacing:.5px; direction:ltr; text-shadow:0 2px 8px rgba(0,0,0,.2); }
+  .dev-credit .dev-role { font-size:1rem; font-weight:600; opacity:.92; margin-top:4px; direction:ltr; }
+  /* سجل الجلسات */
+  dialog { border:none; border-radius:20px; padding:22px; width:min(780px, 94vw); max-height:90vh; box-shadow:0 20px 60px rgba(0,0,0,.35); }
+  dialog::backdrop { background:rgba(45,52,54,.55); }
+  dialog h2 { color:#e84393; font-size:1.2rem; margin-bottom:10px; }
+  .chart-box { margin-bottom:14px; }
+  .chart-box h3 { font-size:.98rem; color:#2d3436; }
+  .legend { font-size:.82rem; color:#636e72; text-align:center; margin-top:4px; }
+  .hist-scroll { overflow:auto; max-height:30vh; border:1px solid #eee; border-radius:12px; }
+  .hist-table { min-width:0; font-size:.9rem; }
+  .hist-none { color:#636e72; line-height:1.8; padding:16px 0; }
+  /* التقرير المطبوع: مخفي على الشاشة */
+  #printReport { display:none; }
   @media (max-width:850px) { .stats { grid-template-columns:repeat(2,1fr); } }
-
-  /* تحسينات الواجهة */
-  header h1 { display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center; }
-  header p { color:rgba(255,255,255,.92); margin-top:6px; font-weight:600; }
-  .card h2 { font-weight:800; }
-  .card { transition:transform .2s, box-shadow .2s; }
-  .tab:hover { transform:translateY(-2px); }
-  .tab:focus-visible, .btn:focus-visible, select:focus-visible, input:focus-visible { outline:3px solid #fdcb6e; outline-offset:2px; }
   @media (max-width:560px) {
     body { padding:16px 12px; }
     .tabs { flex-direction:column; }
@@ -80,858 +129,183 @@
     .timer-display { font-size:3.6rem; }
     .timer-actions .btn { flex:1 1 140px; }
   }
-  /* بطاقة المطوّر */
-  .dev-credit { margin:6px auto 0; text-align:center; color:#fff; padding:16px 20px; border-radius:18px; background:rgba(255,255,255,.18); backdrop-filter:blur(4px); box-shadow:0 10px 30px rgba(0,0,0,.15); max-width:360px; }
-  .dev-credit .dev-name { font-size:1.5rem; font-weight:800; letter-spacing:.5px; direction:ltr; text-shadow:0 2px 8px rgba(0,0,0,.2); }
-  .dev-credit .dev-link:hover .dev-name { text-decoration:underline; }
-  .dev-credit .dev-role { font-size:1rem; font-weight:600; opacity:.92; margin-top:4px; direction:ltr; }
-
-  /* التبويبات والفحص الفردي */
-  .tabs { display:flex; gap:10px; margin-bottom:18px; }
-  .tab { flex:1; padding:14px; border:none; border-radius:16px; font-family:inherit; font-weight:700; font-size:1.02rem; background:#fff; color:#6c5ce7; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.12); }
-  .tab.active { background:linear-gradient(135deg,#e84393,#0984e3); color:#fff; }
-  .solo-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
-  .solo-grid label { display:block; font-weight:700; margin-bottom:4px; font-size:.92rem; }
-  .solo-grid input, .solo-grid select { width:100%; padding:10px; border:2px solid #dfe6e9; border-radius:12px; font-family:inherit; font-size:1rem; }
-  .solo-result { margin-top:16px; text-align:center; }
-  .solo-result .badge { font-size:1.1rem; padding:8px 16px; }
-  .solo-result .flags { margin-top:8px; }
-  /* عداد الدقيقة */
-  .timer-card { text-align: center; }
-  .timer-display {
-    font-size: 4.5rem; font-weight: 800; line-height: 1.1; margin: 6px 0 4px;
-    font-variant-numeric: tabular-nums; color: #e84393;
+  @page { size:A4; margin:12mm; }
+  @media print {
+    body { background:#fff; padding:0; }
+    .wrap, dialog { display:none !important; }
+    #printReport { display:block; color:#000; font-size:11pt; }
+    #printReport table { min-width:0; width:100%; font-size:9pt; border:1px solid #999; }
+    #printReport th, #printReport td { border:1px solid #bbb; padding:4px; }
+    #printReport th { background:#eee; position:static; }
+    .report-foot { margin-top:14px; font-size:9pt; color:#444; }
   }
-  .timer-display.running { color: #0984e3; }
-  .timer-display.done { color: #00b894; animation: tpulse 1s infinite; }
-  @keyframes tpulse { 50% { transform: scale(1.06); } }
-  .timer-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
-  .timer-actions .btn { flex: 0 1 200px; }
-  #tMsg { margin-top: 10px; }
 </style>
 </head>
 <body>
+
+<div id="printReport"></div>
+
 <div class="wrap">
   <div class="msg err show" id="jsWarn">⚠️ المتصفح لم يشغّل الصفحة. افتحها بمتصفح Chrome محدّث، أو حدّث التطبيق الحالي.</div>
+
+  <div class="topbar"><button class="lang-btn" id="langBtn" type="button"></button></div>
+
   <header>
     <h1>🫀 نبضات ربيع</h1>
-    <p>اختر الوضع: فحص قائمة تلاميذ، أو فحص فردي لشخص واحد</p>
+    <p data-i18n="app.sub"></p>
   </header>
 
   <div class="tabs" role="tablist">
-    <button class="tab active" data-view="teachers" role="tab">👩‍🏫 للأساتذة (قائمة تلاميذ)</button>
-    <button class="tab" data-view="solo" role="tab">🙋 فحص فردي</button>
+    <button class="tab active" type="button" role="tab" data-view="teachers" data-i18n="tab.teachers"></button>
+    <button class="tab" type="button" role="tab" data-view="solo" data-i18n="tab.solo"></button>
   </div>
 
-  <section class="card timer-card" id="timerCard">
-    <h2 style="justify-content:center">⏱️ عداد الدقيقة</h2>
+  <div class="msg" id="appMsg"></div>
+
+  <section class="card timer-card">
+    <h2 class="center" data-i18n="timer.title"></h2>
     <div class="timer-display" id="tDisplay" aria-live="polite">01:00</div>
     <div class="timer-actions">
-      <button class="btn green" id="tStart">▶️ ابدأ دقيقة</button>
-      <button class="btn gray" id="tReset">🔄 إعادة</button>
+      <button class="btn green" id="tStart" type="button"></button>
+      <button class="btn gray" id="tReset" type="button" data-i18n="timer.reset"></button>
     </div>
     <div class="msg" id="tMsg"></div>
   </section>
 
   <div id="viewTeachers">
-  <section class="card">
-    <h2>📂 قائمة التلاميذ</h2>
-    <div class="upload">
-      <label class="drop" for="file">
-        ⬆️ اختر ملف القائمة
-        <small>يقبل Excel (.xlsx) أو CSV. يبحث عن الأعمدة بعناوينها: «اللقب والاسم»، «الجنس»، «تاريخ الميلاد»، ويقرأ كل الكشوف الموجودة في الملف.</small>
-      </label>
-    </div>
-    <div class="field" style="margin-top:12px">
-      <label for="fallbackClass" style="font-weight:700">اسم القسم (يُستعمل إن لم يذكر الملف اسم القسم)</label>
-      <input id="fallbackClass" placeholder="مثال: قسم 2 متوسط" style="width:100%;padding:10px;border:2px solid #dfe6e9;border-radius:12px;font-family:inherit">
-    </div>
-    <p style="margin-top:12px"><input type="file" id="file" accept=".xlsx,.csv"></p>
-    <details style="margin-top:12px">
-      <summary style="cursor:pointer;font-weight:700;color:#e84393">أو الصق الجدول مباشرة (إذا لم يعمل رفع الملف)</summary>
-      <p style="font-size:.88rem;color:#636e72;margin:8px 0">افتح الملف في Excel، حدد الجدول كاملاً (بما فيه العناوين)، انسخه (Ctrl+C) ثم الصقه هنا (Ctrl+V):</p>
-      <textarea id="pasteBox" rows="5" style="width:100%;padding:10px;border:2px solid #dfe6e9;border-radius:12px;font-family:inherit"></textarea>
-      <div class="preview-actions"><button class="btn" id="parsePaste">🔍 تحليل الجدول الملصوق</button></div>
-    </details>
-    <div class="msg" id="importMsg"></div>
-    <div id="previewBox" style="display:none">
-      <div class="msg info show" id="previewText"></div>
-      <div class="preview-actions">
-        <button class="btn green" id="approve">✅ اعتماد القائمة</button>
-        <button class="btn gray" id="cancelPreview">إلغاء</button>
+    <section class="card">
+      <h2 data-i18n="list.title"></h2>
+      <div class="upload">
+        <label class="drop" for="file">
+          <span data-i18n="list.drop"></span>
+          <small data-i18n="list.dropHelp"></small>
+        </label>
       </div>
-    </div>
-  </section>
+      <div class="field" style="margin-top:12px">
+        <label for="fallbackClass" data-i18n="list.classLabel"></label>
+        <input id="fallbackClass" data-i18n-ph="list.classPh">
+      </div>
+      <p style="margin-top:12px"><input type="file" id="file" accept=".xlsx,.csv"></p>
+      <div class="msg" id="importMsg"></div>
+    </section>
 
-  <section class="card">
-    <div class="stats">
-      <div class="stat s-total">التلاميذ<b id="sTotal">0</b></div>
-      <div class="stat s-done">تم قياسهم<b id="sDone">0</b></div>
-      <div class="stat s-ok">نتيجة طبيعية<b id="sOk">0</b></div>
-      <div class="stat s-follow">متابعة<b id="sFollow">0</b></div>
-      <div class="stat s-refer">إحالة للطبيب<b id="sRefer">0</b></div>
-    </div>
+    <section class="card">
+      <div class="stats">
+        <div class="stat s-total"><span data-i18n="stats.total"></span><b id="sTotal">0</b></div>
+        <div class="stat s-done"><span data-i18n="stats.done"></span><b id="sDone">0</b></div>
+        <div class="stat s-ok"><span data-i18n="stats.ok"></span><b id="sOk">0</b></div>
+        <div class="stat s-follow"><span data-i18n="stats.follow"></span><b id="sFollow">0</b></div>
+        <div class="stat s-refer"><span data-i18n="stats.refer"></span><b id="sRefer">0</b></div>
+      </div>
 
-    <div class="toolbar">
-      <input type="search" id="search" placeholder="🔎 ابحث باسم التلميذ...">
-      <select id="classFilter" style="padding:10px;border:2px solid #dfe6e9;border-radius:12px;font-family:inherit;font-size:.95rem;font-weight:700;background:#fff"></select>
-      <button class="btn" id="addExtra">➕ تلميذ غير مسجل</button>
-      <button class="btn green" id="csv">⬇️ تصدير CSV</button>
-      <button class="btn gray" id="clear">🗑️ مسح القياسات</button>
-      <button class="btn red" id="removeList">🗑️ حذف القسم المختار</button>
-    </div>
+      <div class="toolbar">
+        <input type="search" id="search" data-i18n-ph="search.ph">
+        <select id="classFilter"></select>
+        <button class="btn" id="addExtra" type="button" data-i18n="btn.addExtra"></button>
+        <button class="btn" id="report" type="button" data-i18n="btn.report"></button>
+        <button class="btn green" id="backup" type="button" data-i18n="btn.backup"></button>
+        <button class="btn green" id="csv" type="button" data-i18n="btn.csv"></button>
+        <button class="btn gray" id="clear" type="button" data-i18n="btn.clear"></button>
+        <button class="btn red" id="removeList" type="button" data-i18n="btn.removeList"></button>
+      </div>
 
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>القسم</th><th>اللقب والاسم</th>
-            <th>الجنس</th>
-            <th>العمر</th>
-            <th>قبل النشاط</th>
-            <th>فور التوقف</th>
-            <th>بعد دقيقة</th>
-            <th>طريقة التوقف</th>
-            <th>أعراض</th>
-            <th>النتيجة</th>
-          </tr>
-        </thead>
-        <tbody id="rows"></tbody>
-      </table>
-    </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th data-i18n="th.class"></th>
+              <th data-i18n="th.name"></th>
+              <th data-i18n="th.gender"></th>
+              <th data-i18n="th.age"></th>
+              <th data-i18n="th.pre"></th>
+              <th data-i18n="th.post"></th>
+              <th data-i18n="th.rec"></th>
+              <th data-i18n="th.protocol"></th>
+              <th data-i18n="th.symptoms"></th>
+              <th data-i18n="th.result"></th>
+              <th data-i18n="th.session"></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
 
-    <div class="rules">
-      <b>قواعد الفرز:</b><br>
-      • <b>نبض الراحة:</b> الحدود التقريبية 70–120 للأعمار حتى 12 سنة، و60–100 بعدها.<br>
-      • <b>التعافي:</b> الانخفاض في الدقيقة الأولى يُعتبر ضعيفاً إذا كان 12 bpm أو أقل مع التهدئة، أو 18 bpm أو أقل مع التوقف الفوري.<br>
-      • <b>الأعراض:</b> تعني إحالة فورية بصرف النظر عن الأرقام.<br>
-      • <b>نتيجة طبيعية:</b> لا مؤشرات. &nbsp; <b>متابعة:</b> مؤشر واحد، وتُعاد القياسات بعد أسبوع.<br>
-      • <b>إحالة للطبيب:</b> أعراض، أو مؤشران معاً.
-    </div>
-    <div class="note">
-      ⚠️ هذه أداة فرز أولي وليست تشخيصاً، ولا تُستعمل الأرقام وحدها لوصف تلميذ بأنه مريض. العتبات مأخوذة من دراسات على البالغين وتقديرات تقريبية للأطفال، ويجب أن يعتمدها الطبيب المختص قبل الاستعمال الرسمي.
-    </div>
-    <div class="note" style="background:#dfe6e9">
-      🔒 القائمة والقياسات تُحفظ في متصفح هذا الجهاز فقط، ولا يُرسل الملف أي بيانات إلى أي خادم. قائمة التلاميذ تحتوي أسماء الأطفال وتواريخ ميلادهم، فلا تشاركها. صدّر ملف CSV للاحتفاظ بنسخة. العمر محسوب من تاريخ الميلاد بتاريخ اليوم، ويمكن تعديله يدوياً.
-    </div>
-  </section>
-
+      <div class="rules" data-i18n-html="rules.html"></div>
+      <div class="note" data-i18n-html="note.html"></div>
+    </section>
   </div>
 
   <section class="card" id="viewSolo" hidden>
-    <h2>🙋 فحص فردي</h2>
-    <p style="color:#636e72;margin-bottom:14px">أدخل بيانات الشخص وقياسات نبضه. لا يحتاج إلى قائمة تلاميذ، والنتيجة تُحسب بالقواعد نفسها.</p>
+    <h2 data-i18n="solo.title"></h2>
+    <p style="color:#636e72; margin-bottom:14px" data-i18n="solo.intro"></p>
     <div class="solo-grid">
-      <div><label for="sName">الاسم (اختياري)</label><input id="sName" placeholder="الاسم"></div>
-      <div><label for="sGender">الجنس</label><select id="sGender"><option value="">—</option><option value="m">ذكر</option><option value="f">أنثى</option></select></div>
-      <div><label for="sAge">العمر (سنة)</label><input id="sAge" type="number" min="6" max="18"></div>
-      <div><label for="sPre">نبض الراحة قبل النشاط</label><input id="sPre" type="number" min="30" max="200"></div>
-      <div><label for="sPost">النبض فور التوقف</label><input id="sPost" type="number" min="30" max="240"></div>
-      <div><label for="sRec">النبض بعد دقيقة</label><input id="sRec" type="number" min="30" max="240"></div>
-      <div><label for="sProtocol">طريقة التوقف</label><select id="sProtocol"><option value="cooldown">تهدئة بالمشي</option><option value="abrupt">توقف فوري</option></select></div>
-      <div><label><input type="checkbox" id="sSymptoms" style="width:auto"> ظهرت أعراض (دوخة، ألم صدر، ضيق نفس)</label></div>
+      <div><label for="sName" data-i18n="solo.name"></label><input id="sName"></div>
+      <div><label for="sGender" data-i18n="solo.gender"></label><select id="sGender"><option value="" data-i18n="gender.none"></option><option value="m" data-i18n="gender.m"></option><option value="f" data-i18n="gender.f"></option></select></div>
+      <div><label for="sAge" data-i18n="solo.age"></label><input id="sAge" type="number" min="6" max="18"></div>
+      <div><label for="sPre" data-i18n="solo.pre"></label><input id="sPre" type="number" min="30" max="200"></div>
+      <div><label for="sPost" data-i18n="solo.post"></label><input id="sPost" type="number" min="30" max="240"></div>
+      <div><label for="sRec" data-i18n="solo.rec"></label><input id="sRec" type="number" min="30" max="240"></div>
+      <div><label for="sProtocol" data-i18n="solo.protocol"></label><select id="sProtocol"><option value="cooldown" data-i18n="protocol.cooldown"></option><option value="abrupt" data-i18n="protocol.abrupt"></option></select></div>
+      <div><label><input type="checkbox" id="sSymptoms" style="width:auto"> <span data-i18n="solo.symptoms"></span></label></div>
     </div>
     <div class="solo-result" id="soloResult"></div>
-    <div class="preview-actions"><button class="btn gray" id="sClear">🗑️ مسح الحقول</button></div>
+    <div class="preview-actions"><button class="btn gray" id="sClear" type="button" data-i18n="btn.clearFields"></button></div>
   </section>
 
-  <section class="card" style="text-align:center">
-    <h2 style="justify-content:center">📌 معلومات التطبيق</h2>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
-      <a href="terms.html" class="btn" style="text-decoration:none;display:inline-block;padding:11px 16px;color:#fff;border-radius:12px;background:linear-gradient(135deg,#6C5CE7,#00CEC9)">📄 شروط الاستخدام</a>
-      <a href="privacy.html" class="btn" style="text-decoration:none;display:inline-block;padding:11px 16px;color:#fff;border-radius:12px;background:linear-gradient(135deg,#00b894,#55efc4)">🔒 سياسة الخصوصية</a>
+  <section class="card">
+    <details class="advanced">
+      <summary data-i18n="adv.title"></summary>
+      <div class="adv-body">
+        <details class="sub">
+          <summary data-i18n="adv.pasteSummary"></summary>
+          <p style="font-size:.88rem; color:#636e72; margin:8px 0" data-i18n="adv.pasteHelp"></p>
+          <textarea id="pasteBox" rows="5"></textarea>
+          <div class="preview-actions"><button class="btn" id="parsePaste" type="button" data-i18n="btn.parsePaste"></button></div>
+        </details>
+
+        <h3 data-i18n="adv.restoreTitle"></h3>
+        <p style="font-size:.88rem; color:#636e72; line-height:1.7" data-i18n="adv.restoreHelp"></p>
+        <p style="margin-top:8px"><input type="file" id="restoreFile" accept=".json,application/json"></p>
+
+        <div class="preview-actions" style="margin-top:16px">
+          <button class="btn red" id="wipe" type="button" data-i18n="adv.wipe"></button>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <section class="card info-card">
+    <h2 data-i18n="info.title"></h2>
+    <div class="info-links">
+      <a href="terms.html" data-i18n="info.terms"></a>
+      <a href="privacy.html" data-i18n="info.privacy"></a>
     </div>
-    <div style="margin-top:14px">
-      <a href="https://www.facebook.com/share/19etGLcxMB/" style="display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:#1877F2;font-weight:800;font-size:1.05rem">
-        <svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="5" fill="#1877F2"/><path fill="#fff" d="M16.7 15.5l.5-3.3h-3.2V10c0-.9.4-1.8 1.9-1.8h1.5V5.4s-1.4-.2-2.7-.2c-2.7 0-4.5 1.6-4.5 4.6v2.6H7.2v3.3h3V24h3.6v-8.5h2.9z"/></svg>
-        تابعونا على فيسبوك
+    <div>
+      <a class="fb-link" href="https://www.facebook.com/share/19etGLcxMB/">
+        <svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="5" fill="#1877F2"/><path fill="#fff" d="M16.7 15.5l.5-3.4h-3.3V9.9c0-.9.5-1.8 1.9-1.8h1.5V5.2s-1.4-.2-2.7-.2c-2.7 0-4.5 1.6-4.5 4.6v2.5H7.1v3.4h3.1V24h3.8v-8.5z"/></svg>
+        <span data-i18n="info.fb"></span>
       </a>
     </div>
   </section>
 
-  <footer class="dev-credit" aria-label="المطوّر">
-    <a class="dev-link" href="https://www.facebook.com/share/19etGLcxMB/" style="color:inherit;text-decoration:none;display:block">
+  <footer class="dev-credit" aria-label="Ali.dz">
+    <a href="https://www.facebook.com/share/19etGLcxMB/">
       <div class="dev-name">Ali.dz</div>
-      <div class="dev-role">Software developer</div>
+      <div class="dev-role" data-i18n="dev.role"></div>
     </a>
   </footer>
 </div>
 
-<script>
-  var $ = function (id) { return document.getElementById(id); };
-  $('jsWarn').style.display = 'none';
-  var STORE_KEY = 'pupilsCheckList_v2';
-  const MEAS = ['pre', 'post', 'rec', 'protocol', 'symptoms', 'ageEdited'];
-  const LABELS = { ok: 'نتيجة طبيعية', follow: 'متابعة', refer: 'إحالة للطبيب', incomplete: 'غير مكتمل' };
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const norm = s => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
-
-  let pupils = [];
-  let currentClass = 'all';
-  let pendingList = null;
-
-  // ===== العمر والبيانات =====
-  function ageFromDob(dob) {
-    if (!dob) return null;
-    const today = new Date();
-    const b = new Date(dob + 'T00:00:00');
-    let a = today.getFullYear() - b.getFullYear();
-    const m = today.getMonth() - b.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < b.getDate())) a--;
-    return a;
-  }
-
-  function newPupil(name, g, dob, extra, cls) {
-    return {
-      name, g, dob, cls: cls || 'بدون قسم', age: ageFromDob(dob), ageEdited: false,
-      pre: '', post: '', rec: '', protocol: 'cooldown', symptoms: false, extra
-    };
-  }
-
-  function save() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(pupils)); } catch (e) {}
-  }
-
-  function load() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
-      if (!Array.isArray(saved)) return;
-      pupils = saved.map(s => {
-        const p = { ...newPupil(s.name || '', s.g || '', s.dob || '', !!s.extra), ...s };
-        if (!p.ageEdited && p.dob) p.age = ageFromDob(p.dob); // تحديث العمر بتاريخ اليوم
-        return p;
-      });
-    } catch (e) {}
-  }
-
-  // ===== قراءة الملفات (بدون مكتبات خارجية) =====
-  function colIndex(ref) {
-    const letters = /^([A-Z]+)/.exec(ref)[1];
-    let n = 0;
-    for (const ch of letters) n = n * 26 + (ch.charCodeAt(0) - 64);
-    return n - 1;
-  }
-
-  async function inflateRaw(data) {
-    if (!window.DecompressionStream) throw new Error('المتصفح لا يدعم فك ضغط الملفات، استعمل متصفحاً حديثاً أو احفظ الملف بصيغة CSV.');
-    const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-    return new Uint8Array(await new Response(stream).arrayBuffer());
-  }
-
-  async function unzipAll(buf) {
-    const u8 = new Uint8Array(buf);
-    const dv = new DataView(buf);
-    let eocd = -1;
-    for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) {
-      if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
-    }
-    if (eocd < 0) throw new Error('الملف ليس xlsx صالحاً.');
-    const count = dv.getUint16(eocd + 10, true);
-    let p = dv.getUint32(eocd + 16, true);
-    const files = {};
-    for (let k = 0; k < count; k++) {
-      if (dv.getUint32(p, true) !== 0x02014b50) break;
-      const method = dv.getUint16(p + 10, true);
-      const csize = dv.getUint32(p + 20, true);
-      const nlen = dv.getUint16(p + 28, true);
-      const elen = dv.getUint16(p + 30, true);
-      const clen = dv.getUint16(p + 32, true);
-      const loff = dv.getUint32(p + 42, true);
-      const name = new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nlen));
-      const start = loff + 30 + dv.getUint16(loff + 26, true) + dv.getUint16(loff + 28, true);
-      const data = u8.subarray(start, start + csize);
-      files[name] = method === 0 ? data : await inflateRaw(data);
-      p += 46 + nlen + elen + clen;
-    }
-    return files;
-  }
-
-  async function readXlsx(buf) {
-    const files = await unzipAll(buf);
-    const dec = new TextDecoder();
-    const xml = name => files[name] ? new DOMParser().parseFromString(dec.decode(files[name]), 'application/xml') : null;
-    const ss = [];
-    const sst = xml('xl/sharedStrings.xml');
-    if (sst) for (const si of Array.from(sst.getElementsByTagName('si'))) {
-      ss.push(Array.from(si.getElementsByTagName('t')).map(t => t.textContent).join(''));
-    }
-    const names = Object.keys(files)
-      .filter(n => /^xl\/worksheets\/sheet\d+\.xml$/.test(n))
-      .sort((a, b) => Number(a.match(/\d+/)[0]) - Number(b.match(/\d+/)[0]));
-    const sheets = [];
-    for (const n of names) {
-      const doc = xml(n);
-      const grid = [];
-      for (const row of Array.from(doc.getElementsByTagName('row'))) {
-        const r = Number(row.getAttribute('r')) - 1;
-        grid[r] = grid[r] || [];
-        for (const c of Array.from(row.getElementsByTagName('c'))) {
-          const ci = colIndex(c.getAttribute('r'));
-          const t = c.getAttribute('t');
-          const v = c.getElementsByTagName('v')[0];
-          let val = '';
-          if (t === 's') val = v ? (ss[Number(v.textContent)] || '') : '';
-          else if (t === 'inlineStr') val = Array.from(c.getElementsByTagName('t')).map(x => x.textContent).join('');
-          else if (v) {
-            const x = v.textContent;
-            val = (t === 'str' || t === 'e' || t === 'b') ? x : (x.trim() !== '' && !isNaN(x) ? Number(x) : x);
-          }
-          grid[r][ci] = val;
-        }
-      }
-      sheets.push(Array.from(grid, row => row ? Array.from({ length: row.length }, (_, i) => (row[i] === undefined ? '' : row[i])) : []));
-    }
-    return sheets;
-  }
-
-  function readCsv(text) {
-    text = text.replace(/^﻿/, '');
-    const rows = [];
-    let row = [], cell = '', q = false;
-    for (let i = 0; i < text.length; i++) {
-      const ch = text[i];
-      if (q) {
-        if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
-        else cell += ch;
-      } else if (ch === '"') q = true;
-      else if (ch === ',' || ch === ';') { row.push(cell); cell = ''; }
-      else if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
-      else if (ch !== '\r') cell += ch;
-    }
-    if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
-    return [rows];
-  }
-
-  // ===== تحليل القائمة: يبحث عن رؤوس الأعمدة في كل الكشوف =====
-  const EXCLUDE = /المجموع|مجموع|الذكور|الإناث|إمضاء|جدد|معيدين|قوائم|الجمهورية|وزارة|مديرية|الموسم|الجنس|تاريخ|اللقب|الاسم/;
-
-  const NAME_RE = /اللقب|الاسم|اسم|لقب|nom|name/i;
-  const GENDER_RE = /الجنس|النوع|sexe|gender|sex/i;
-  const DOB_RE = /الميلاد|الازدياد|ازدياد|الولادة|ولادة|ميلاد|naissance|birth/i;
-
-  function parseGender(v) {
-    const s = norm(v);
-    if (/^(ذكر|ذكور|m|male)/i.test(s)) return 'm';
-    if (/^(أنثى|انثى|أنثي|انثي|إناث|اناث|f|female)/i.test(s)) return 'f';
-    return '';
-  }
-
-  function isoOf(y, mo, d) {
-    if (y < 1990 || y > 2035 || mo < 1 || mo > 12 || d < 1 || d > 31) return '';
-    return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-  }
-
-  function parseDob(v) {
-    if (v === '' || v === null || v === undefined) return '';
-    if (typeof v === 'number' || /^\d{5}$/.test(norm(v))) {
-      const days = Math.round(Number(v));
-      if (days <= 0) return '';
-      return new Date(Date.UTC(1899, 11, 30) + days * 86400000).toISOString().slice(0, 10);
-    }
-    const s = norm(v);
-    let m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/);
-    if (m) return isoOf(+m[1], +m[2], +m[3]);
-    m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/);
-    if (m) return isoOf(+m[3], +m[2], +m[1]);
-    return '';
-  }
-
-  function cleanClassName(t) {
-    return norm(t).replace(/قوائم\s*تلاميذ/g, '').replace(/^[\s:\-–]+/, '').trim();
-  }
-
-  // يبحث عن عنوان القسم (مثل «قوائم تلاميذ قسم 1 متوسط») فوق رأس الجدول
-  function findClassName(A, r) {
-    for (let rr = r; rr >= Math.max(0, r - 8); rr--) {
-      for (const cell of (A[rr] || [])) {
-        const t = norm(cell);
-        if (t && t.length < 80 && /قسم/.test(t)) {
-          const name = cleanClassName(t);
-          if (name) return name;
-        }
-      }
-    }
-    return '';
-  }
-
-  function parseRoster(sheets, fallbackClass) {
-    const list = [], seen = new Set();
-    let tables = 0, tablesNoDob = 0, tablesNoGender = 0;
-    const seenHeaders = [];
-    for (const A of sheets) {
-      A.slice(0, 80).forEach(row => row.forEach(cell => {
-        const t = norm(cell);
-        if (t && t.length < 60 && !seenHeaders.includes(t) && seenHeaders.length < 15) seenHeaders.push(t);
-      }));
-      // رؤوس الجداول: خلية اسم قصيرة في الصف نفسه يوجد بجانبها عمود الجنس أو تاريخ الميلاد
-      const heads = [];
-      A.forEach((row, r) => row.forEach((cell, c) => {
-        const t = norm(cell);
-        if (!t || t.length > 60 || !NAME_RE.test(t) || /مديرية|وزارة|الجمهورية|قوائم/.test(t)) return;
-        const nearest = re => {
-          let best = -1, bd = Infinity;
-          row.forEach((x, cc) => {
-            if (re.test(norm(x))) { const d = Math.abs(cc - c); if (d < bd) { bd = d; best = cc; } }
-          });
-          return best;
-        };
-        const gc = nearest(GENDER_RE), dc = nearest(DOB_RE);
-        if (gc < 0 && dc < 0) return;
-        heads.push({ r, c, gc, dc, cls: findClassName(A, r) || fallbackClass || 'قسم غير مسمى' });
-      }));
-      heads.forEach((h, idx) => {
-        tables++;
-        if (h.dc < 0) tablesNoDob++;
-        if (h.gc < 0) tablesNoGender++;
-        const nextR = (heads.slice(idx + 1).find(x => x.c === h.c && x.r > h.r) || { r: A.length }).r;
-        for (let r = h.r + 1; r < nextR; r++) {
-          const rowR = A[r] || [];
-          const name = norm(rowR[h.c]);
-          if (name.length < 3 || !/[A-Za-z\u0600-\u06FF]/.test(name) || EXCLUDE.test(name)) continue;
-          const g = h.gc >= 0 ? parseGender(rowR[h.gc]) : '';
-          const dob = h.dc >= 0 ? parseDob(rowR[h.dc]) : '';
-          const key = h.cls + '|' + name + '|' + g + '|' + dob;
-          if (seen.has(key)) continue;
-          seen.add(key);
-          list.push([name, g, dob, h.cls]);
-        }
-      });
-    }
-    return { list, tables, tablesNoDob, tablesNoGender, seenHeaders };
-  }
-
-  // ===== الحساب =====
-  function restRange(age) { return age <= 12 ? [70, 120] : [60, 100]; }
-  function num(v) { return v === '' || v === null || v === undefined ? null : Number(v); }
-
-  function classify(p) {
-    const anyValue = p.pre !== '' || p.post !== '' || p.rec !== '' || p.symptoms;
-    if (!anyValue) return { status: null, flags: [] };
-    if (p.symptoms) return { status: 'refer', flags: ['ظهرت أعراض: إحالة فورية'] };
-
-    const pre = num(p.pre), post = num(p.post), rec = num(p.rec);
-    if (pre === null || post === null || rec === null) return { status: 'incomplete', flags: ['أكمل القياسات الثلاثة'] };
-    if (p.age === null || p.age === '' || p.age === undefined) return { status: 'incomplete', flags: ['أدخل عمر التلميذ'] };
-    if (rec > post) return { status: 'incomplete', flags: ['تحقق من القياس: النبض بعد دقيقة أكبر من فور التوقف'] };
-
-    const strong = [], weak = [];
-    const [lo, hi] = restRange(Number(p.age));
-    if (pre < lo || pre > hi) strong.push(`نبض الراحة ${pre} خارج المعتاد (${lo}–${hi})`);
-
-    const drop = post - rec;
-    const th = p.protocol === 'abrupt' ? 18 : 12;
-    if (drop <= th) weak.push(`تعافٍ ضعيف: انخفاض ${drop} bpm (العتبة ${th})`);
-
-    let status;
-    if (strong.length && weak.length) status = 'refer';
-    else if (strong.length || weak.length) status = 'follow';
-    else status = 'ok';
-    return { status, flags: [...strong, ...weak] };
-  }
-
-  // ===== الجدول =====
-  function rowHtml(p, i) {
-    const gender = p.g === 'm' ? 'ذكر' : p.g === 'f' ? 'أنثى' : '';
-    const nameCell = p.extra
-      ? `<input class="txt" data-f="name" value="${esc(p.name)}" placeholder="اسم التلميذ">`
-      : esc(p.name);
-    return `<tr data-i="${i}" class="${p.extra ? 'extra' : ''}">
-      <td class="g">${i + 1}</td>
-      <td class="g">${esc(p.cls)}</td>
-      <td class="name">${nameCell}</td>
-      <td class="g">${gender}</td>
-      <td><input type="number" data-f="age" min="6" max="18" value="${p.age == null ? '' : p.age}"></td>
-      <td><input type="number" data-f="pre" min="30" max="200" value="${p.pre}"></td>
-      <td><input type="number" data-f="post" min="30" max="240" value="${p.post}"></td>
-      <td><input type="number" data-f="rec" min="30" max="240" value="${p.rec}"></td>
-      <td><select data-f="protocol">
-        <option value="cooldown" ${p.protocol !== 'abrupt' ? 'selected' : ''}>تهدئة بالمشي</option>
-        <option value="abrupt" ${p.protocol === 'abrupt' ? 'selected' : ''}>توقف فوري</option>
-      </select></td>
-      <td><input type="checkbox" data-f="symptoms" ${p.symptoms ? 'checked' : ''}></td>
-      <td class="res"></td>
-    </tr>`;
-  }
-
-  function refreshRow(i) {
-    const p = pupils[i];
-    const tr = document.querySelector(`#rows tr[data-i="${i}"]`);
-    if (!tr) return;
-    const r = classify(p);
-    const cell = tr.querySelector('.res');
-    cell.innerHTML = !r.status
-      ? '<span class="badge none">—</span>'
-      : `<span class="badge ${r.status}">${LABELS[r.status]}</span>` +
-        (r.flags.length ? `<div class="flags">${r.flags.map(esc).join('<br>')}</div>` : '');
-  }
-
-  function visiblePupils() {
-    return currentClass === 'all' ? pupils : pupils.filter(p => p.cls === currentClass);
-  }
-
-  function updateStats() {
-    const list = visiblePupils();
-    const c = { total: list.length, done: 0, ok: 0, follow: 0, refer: 0 };
-    list.forEach(p => {
-      const s = classify(p).status;
-      if (s === 'ok' || s === 'follow' || s === 'refer') { c.done++; c[s]++; }
-    });
-    $('sTotal').textContent = c.total;
-    $('sDone').textContent = c.done;
-    $('sOk').textContent = c.ok;
-    $('sFollow').textContent = c.follow;
-    $('sRefer').textContent = c.refer;
-  }
-
-  function applySearch() {
-    const q = $('search').value.trim();
-    document.querySelectorAll('#rows tr').forEach(tr => {
-      if (tr.dataset.i === undefined) return; // صف رسالة الفراغ لا يُخفى
-      const p = pupils[Number(tr.dataset.i)];
-      const inClass = currentClass === 'all' || (p && p.cls === currentClass);
-      const matches = q === '' || (p && p.name.includes(q));
-      tr.classList.toggle('hidden', !(inClass && matches));
-    });
-  }
-
-  function renderClassFilter() {
-    const counts = {};
-    pupils.forEach(p => { counts[p.cls] = (counts[p.cls] || 0) + 1; });
-    if (currentClass !== 'all' && !counts[currentClass]) currentClass = 'all';
-    $('classFilter').innerHTML = `<option value="all">كل الأقسام (${pupils.length})</option>` +
-      Object.keys(counts).map(n => `<option value="${esc(n)}">${esc(n)} (${counts[n]})</option>`).join('');
-    $('classFilter').value = currentClass;
-  }
-
-  function renderAll() {
-    renderClassFilter();
-    if (pupils.length === 0) {
-      $('rows').innerHTML = '<tr><td class="empty" colspan="11"><div class="empty-box">لا توجد قائمة بعد. ارفع ملف قائمة التلاميذ من الأعلى، أو أضف تلميذاً يدوياً.</div></td></tr>';
-    } else {
-      $('rows').innerHTML = pupils.map((p, i) => rowHtml(p, i)).join('');
-      pupils.forEach((_, i) => refreshRow(i));
-    }
-    updateStats();
-    applySearch();
-    save();
-  }
-
-  function onChange(e) {
-    const el = e.target;
-    const f = el.dataset.f;
-    const tr = el.closest('tr');
-    if (!f || !tr) return;
-    const p = pupils[Number(tr.dataset.i)];
-    if (!p) return;
-
-    if (f === 'symptoms') p.symptoms = el.checked;
-    else if (f === 'protocol') p.protocol = el.value;
-    else if (f === 'age') { p.age = el.value === '' ? null : Number(el.value); p.ageEdited = true; }
-    else if (f === 'name') p.name = el.value;
-    else p[f] = el.value;
-
-    refreshRow(Number(tr.dataset.i));
-    updateStats();
-    applySearch();
-    save();
-  }
-
-  $('rows').addEventListener('input', onChange);
-  $('rows').addEventListener('change', onChange);
-
-  $('rows').addEventListener('keydown', e => {
-    if (e.key !== 'Enter' || !e.target.dataset.f) return;
-    e.preventDefault();
-    const f = e.target.dataset.f;
-    let next = e.target.closest('tr').nextElementSibling;
-    while (next && next.classList.contains('hidden')) next = next.nextElementSibling;
-    const el = next && next.querySelector(`[data-f="${f}"]`);
-    if (el) { el.focus(); if (el.select) el.select(); }
-  });
-
-  $('search').addEventListener('input', applySearch);
-
-  $('addExtra').addEventListener('click', () => {
-    pupils.push(newPupil('', '', '', true, currentClass === 'all' ? '' : currentClass));
-    renderAll();
-    const last = document.querySelector('#rows tr:last-child [data-f="name"]');
-    if (last) last.focus();
-  });
-
-  // ===== رفع القائمة =====
-  function showMsg(text, kind) {
-    const m = $('importMsg');
-    m.textContent = text;
-    m.className = 'msg show ' + kind;
-  }
-
-  function showPreview(res, fileName) {
-    const males = res.list.filter(x => x[1] === 'm').length;
-    const females = res.list.filter(x => x[1] === 'f').length;
-    const noDob = res.list.filter(x => !x[2]).length;
-    const sample = res.list.slice(0, 5).map(x => x[0]).join('، ');
-    $('previewText').innerHTML =
-      `وجدت <b>${res.list.length}</b> تلميذاً في ${res.tables} جدول من الملف «${esc(fileName)}» ` +
-      `(${males} ذكر، ${females} أنثى).` +
-      (res.tablesNoDob ? `<br>⚠️ لم أجد عمود تاريخ الميلاد، لذلك أدخل الأعمار يدوياً.` : (noDob ? `<br>⚠️ ${noDob} تلميذ بدون تاريخ ميلاد، أدخل عمره يدوياً.` : '')) +
-      (res.tablesNoGender ? `<br>⚠️ لم أجد عمود الجنس.` : '') +
-      `<br>أمثلة: ${esc(sample)} ...`;
-    $('previewBox').style.display = 'block';
-  }
-
-  window.addEventListener('error', e => showMsg('خطأ في الصفحة: ' + e.message, 'err'));
-
-  function analyzeSheets(sheets, sourceName) {
-    pendingList = null;
-    $('previewBox').style.display = 'none';
-    {
-      const res = parseRoster(sheets, $('fallbackClass').value.trim());
-      if (!res.list.length) {
-        const found = res.seenHeaders.length ? `<br>العناوين التي وجدتها في الملف: ${res.seenHeaders.map(esc).join(' | ')}` : '<br>لم أجد أي نص في الملف.';
-        $('importMsg').innerHTML = 'لم أجد جدولاً للتلاميذ. يجب أن يحتوي الملف على عمود عنوانه «اللقب والاسم» أو «الاسم»، بجانب عمود «الجنس» أو «تاريخ الميلاد».' + found;
-        $('importMsg').className = 'msg show err';
-        return;
-      }
-      pendingList = res;
-      applyPending(sourceName);
-    }
-  }
-
-  $('file').addEventListener('change', async e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    showMsg('جارٍ قراءة الملف...', 'info');
-    try {
-      const name = file.name.toLowerCase();
-      let sheets;
-      if (name.endsWith('.csv')) sheets = readCsv(await file.text());
-      else if (name.endsWith('.xlsx')) sheets = await readXlsx(await file.arrayBuffer());
-      else return showMsg('صيغة الملف غير مدعومة. احفظ الملف بصيغة Excel (.xlsx) أو CSV، أو الصق الجدول مباشرة.', 'err');
-      analyzeSheets(sheets, file.name);
-    } catch (err) {
-      showMsg('تعذر قراءة الملف: ' + err.message + ' — جرّب لصق الجدول مباشرة من الخيار أسفل الخانة.', 'err');
-    }
-    e.target.value = '';
-  });
-
-  $('parsePaste').addEventListener('click', () => {
-    const text = $('pasteBox').value;
-    if (!text.trim()) return showMsg('الصق الجدول في الخانة أولاً.', 'err');
-    const sheets = text.includes('\t')
-      ? [text.replace(/\r/g, '').split('\n').filter(l => l.trim() !== '').map(l => l.split('\t'))]
-      : readCsv(text);
-    try { analyzeSheets(sheets, 'الجدول الملصوق'); }
-    catch (err) { showMsg('تعذر تحليل الجدول: ' + err.message, 'err'); }
-  });
-
-  function hasMeasurement(p) { return p.pre !== '' || p.post !== '' || p.rec !== '' || p.symptoms; }
-
-  // استيراد الأقسام: كل قسم مستقل، ولا يُستبدل إلا القسم الذي يُستورد بنفس الاسم
-  function applyPending(sourceName) {
-    if (!pendingList) return;
-    const incoming = [...new Set(pendingList.list.map(x => x[3]))];
-    const clash = incoming.filter(c => pupils.some(p => p.cls === c && hasMeasurement(p)));
-    if (clash.length && !confirm(`هذه الأقسام فيها قياسات وستُستبدل قوائمها: ${clash.join('، ')}. هل تريد المتابعة؟`)) {
-      pendingList = null;
-      $('previewBox').style.display = 'none';
-      showMsg('لم يُستورد شيء.', 'info');
-      return;
-    }
-    const n = pendingList.list.length;
-    pupils = pupils.filter(p => !incoming.includes(p.cls));
-    pupils.push(...pendingList.list.map(([name, g, dob, cls]) => newPupil(name, g, dob, false, cls)));
-    pendingList = null;
-    $('previewBox').style.display = 'none';
-    currentClass = incoming.length === 1 ? incoming[0] : 'all';
-    showMsg(`تم استيراد ${n} تلميذاً في ${incoming.length} قسم من «${sourceName}»: ${incoming.join('، ')}.`, 'ok');
-    renderAll();
-  }
-
-  $('approve').addEventListener('click', () => applyPending('القائمة'));
-
-  $('cancelPreview').addEventListener('click', () => {
-    pendingList = null;
-    $('previewBox').style.display = 'none';
-  });
-
-  // ===== تصدير ومسح =====
-  $('classFilter').addEventListener('change', e => {
-    currentClass = e.target.value;
-    updateStats();
-    applySearch();
-  });
-
-  $('csv').addEventListener('click', () => {
-    const header = ['القسم', 'الاسم', 'الجنس', 'العمر', 'قبل النشاط', 'فور التوقف', 'بعد دقيقة', 'طريقة التوقف', 'أعراض', 'النتيجة', 'الملاحظات'];
-    const lines = visiblePupils().map(p => {
-      const r = classify(p);
-      const g = p.g === 'm' ? 'ذكر' : p.g === 'f' ? 'أنثى' : '';
-      return [
-        p.cls, p.name, g, (p.age == null ? '' : p.age), p.pre, p.post, p.rec,
-        p.protocol === 'abrupt' ? 'توقف فوري' : 'تهدئة',
-        p.symptoms ? 'نعم' : 'لا',
-        r.status ? LABELS[r.status] : '',
-        r.flags.join(' | ')
-      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
-    });
-    const csv = '\uFEFF' + [header.map(h => `"${h}"`).join(','), ...lines].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = (currentClass === 'all' ? 'فحص_النبضات_كل_الأقسام' : 'فحص_النبضات_' + currentClass) + '.csv';
-    a.click();
-  });
-
-  $('clear').addEventListener('click', () => {
-    const scope = currentClass === 'all' ? 'جميع الأقسام' : currentClass;
-    if (!confirm(`سيتم مسح قياسات ${scope}، وتبقى أسماء التلاميذ. هل تريد المتابعة؟`)) return;
-    visiblePupils().forEach(p => { p.pre = ''; p.post = ''; p.rec = ''; p.symptoms = false; p.protocol = 'cooldown'; });
-    renderAll();
-  });
-
-  $('removeList').addEventListener('click', () => {
-    const scope = currentClass === 'all' ? 'جميع الأقسام' : currentClass;
-    if (!confirm(`سيتم حذف ${scope} وقياساته من هذا الجهاز. هل أنت متأكد؟`)) return;
-    pupils = currentClass === 'all' ? [] : pupils.filter(p => p.cls !== currentClass);
-    currentClass = 'all';
-    renderAll();
-    showMsg('تم الحذف.', 'info');
-  });
-
-
-  // ===== عداد الدقيقة =====
-  const TIMER_TOTAL = 60000;
-  let tRemaining = TIMER_TOTAL;   // بالميلي ثانية عند التوقف
-  let tEnd = 0;                   // وقت الانتهاء عند التشغيل
-  let tTick = null;
-
-  function fmtTime(ms) {
-    const s = Math.ceil(ms / 1000);
-    return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
-  }
-
-  function tSetMsg(text, kind) {
-    const m = $('tMsg');
-    m.textContent = text || '';
-    m.className = 'msg' + (text ? ' show ' + (kind || 'info') : '');
-  }
-
-  function tRender(state) {
-    const d = $('tDisplay');
-    d.textContent = fmtTime(tRemaining);
-    d.className = 'timer-display' + (state ? ' ' + state : '');
-    $('tStart').textContent = tTick ? '⏸️ إيقاف مؤقت' : (tRemaining < TIMER_TOTAL && tRemaining > 0 ? '▶️ متابعة' : '▶️ ابدأ دقيقة');
-  }
-
-  function tBeep() {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      [0, 0.45, 0.9].forEach(offset => {
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.frequency.value = 880;
-        o.connect(g); g.connect(ctx.destination);
-        g.gain.setValueAtTime(0.3, ctx.currentTime + offset);
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.35);
-        o.start(ctx.currentTime + offset);
-        o.stop(ctx.currentTime + offset + 0.4);
-      });
-    } catch (e) { /* الصوت غير متاح: نكتفي بالاهتزاز والرسالة */ }
-    try { if (navigator.vibrate) navigator.vibrate([400, 200, 400]); } catch (e) {}
-  }
-
-  function tStop() {
-    clearInterval(tTick);
-    tTick = null;
-  }
-
-  function tFinish() {
-    tStop();
-    tRemaining = 0;
-    tRender('done');
-    tSetMsg('⏰ انتهت الدقيقة. سجّل النبض الآن في الجدول.', 'ok');
-    tBeep();
-  }
-
-  function tLoop() {
-    tRemaining = Math.max(0, tEnd - Date.now());
-    if (tRemaining <= 0) { tFinish(); return; }
-    tRender('running');
-  }
-
-  $('tStart').addEventListener('click', () => {
-    if (tTick) {
-      // إيقاف مؤقت
-      tStop();
-      tRender('');
-      tSetMsg('تم الإيقاف مؤقتاً.', 'info');
-      return;
-    }
-    if (tRemaining <= 0) tRemaining = TIMER_TOTAL;
-    tEnd = Date.now() + tRemaining;
-    tSetMsg('');
-    tLoop();
-    tTick = setInterval(tLoop, 250);
-  });
-
-  $('tReset').addEventListener('click', () => {
-    tStop();
-    tRemaining = TIMER_TOTAL;
-    tSetMsg('');
-    tRender('');
-  });
-
-  // عند عودة الصفحة للواجهة بعد قفل الشاشة نحسب الوقت من جديد
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && tTick) tLoop();
-  });
-
-  tRender('');
-
-
-  // ===== التبويبات =====
-  function showView(v) {
-    $('viewTeachers').hidden = v !== 'teachers';
-    $('viewSolo').hidden = v !== 'solo';
-    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.view === v));
-  }
-  document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
-
-  // ===== الفحص الفردي =====
-  function readSolo() {
-    const age = $('sAge').value === '' ? null : Number($('sAge').value);
-    return {
-      name: $('sName').value.trim(), g: $('sGender').value, cls: 'فردي',
-      age, ageEdited: true, pre: $('sPre').value, post: $('sPost').value, rec: $('sRec').value,
-      protocol: $('sProtocol').value, symptoms: $('sSymptoms').checked
-    };
-  }
-
-  function renderSolo() {
-    const p = readSolo();
-    const r = classify(p);
-    const box = $('soloResult');
-    if (!r.status) {
-      box.innerHTML = '<span class="badge none">—</span><div class="flags">أدخل القياسات لتظهر النتيجة</div>';
-      return;
-    }
-    box.innerHTML = `<span class="badge ${r.status}">${LABELS[r.status]}</span>` +
-      (r.flags.length ? `<div class="flags">${r.flags.map(esc).join('<br>')}</div>` : '');
-  }
-
-  ['sName','sGender','sAge','sPre','sPost','sRec','sProtocol','sSymptoms'].forEach(id =>
-    $(id).addEventListener('input', renderSolo));
-  $('sProtocol').addEventListener('change', renderSolo);
-  $('sSymptoms').addEventListener('change', renderSolo);
-  $('sClear').addEventListener('click', () => {
-    ['sName','sAge','sPre','sPost','sRec'].forEach(id => $(id).value = '');
-    $('sGender').value = ''; $('sProtocol').value = 'cooldown'; $('sSymptoms').checked = false;
-    renderSolo();
-  });
-  renderSolo();
-
-  load();
-  renderAll();
-</script>
+<dialog id="histDialog">
+  <h2 id="histTitle"></h2>
+  <div id="histBody"></div>
+  <div class="preview-actions"><button class="btn gray" id="histClose" type="button" data-i18n="hist.close"></button></div>
+</dialog>
+
+<script src="js/core.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

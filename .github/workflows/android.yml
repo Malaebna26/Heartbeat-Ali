@@ -27,19 +27,19 @@ jobs:
         with:
           gradle-version: 8.11.1
 
-      - name: فحص صفحة الفحص (JavaScript)
+      - name: فحص JavaScript والاختبارات
         run: |
+          for f in app/src/main/assets/app/js/*.js; do node --check "$f"; done
+          node --test tests/core.test.js tests/parser.test.js
           python3 - <<'PY'
-          import re, pathlib, subprocess
-          html = pathlib.Path('app/src/main/assets/app/index.html').read_text(encoding='utf-8')
-          js = re.findall(r'<script>(.*?)</script>', html, re.S)[0]
-          pathlib.Path('page.js').write_text(js, encoding='utf-8')
-          subprocess.run(['node', '--check', 'page.js'], check=True)
-          # لا يجوز أن تحتوي الصفحة على روابط خارجية
-          ext = re.findall(r'(?:https?:)?//[^\s"\')]+', html)
-          ext = [e for e in ext if 'facebook.com/share/19etGLcxMB' not in e]
-          assert not ext, f'روابط خارجية غير مسموحة: {ext}'
-          print('الصفحة سليمة وبلا روابط خارجية')
+          import re, pathlib
+          files = ['app/src/main/assets/app/index.html'] + [str(f) for f in pathlib.Path('app/src/main/assets/app/js').glob('*.js')]
+          for name in files:
+              text = pathlib.Path(name).read_text(encoding='utf-8')
+              ext = re.findall(r'(?:https?:)?//[^\s"\')]+', text)
+              ext = [e for e in ext if 'facebook.com/share/19etGLcxMB' not in e]
+              assert not ext, f'{name}: روابط خارجية غير مسموحة: {ext}'
+          print('الصفحات والسكربتات سليمة وبلا روابط خارجية، والاختبارات نجحت')
           PY
 
       - name: توقيع الإصدار (اختياري، إن وُجدت الأسرار)
