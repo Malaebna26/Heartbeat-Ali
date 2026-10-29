@@ -59,11 +59,27 @@ jobs:
           KEY_PASSWORD=$(clean "$KEY_PASSWORD")
           KEY_ALIAS=$(clean "$KEY_ALIAS")
           echo "$KEYSTORE_BASE64" | tr -d ' \r\n' | base64 -d > release-key.jks
-          if ! keytool -list -keystore release-key.jks -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" > /dev/null 2>&1; then
-            echo 'خطأ: تعذّر فتح مفتاح التوقيع بالسرّين STORE_PASSWORD و KEY_ALIAS، أو الاسم غير موجود.'
-            echo 'تحقق من قيمة هذه الأسرار في إعدادات GitHub (بدون مسافات أو أسطر زائدة).'
+          # 1) هل فكّ الـ base64 يعطي المفتاح الصحيح؟ (بصمة الملف المتوقعة، ليست سراً)
+          if [ "$(sha256sum release-key.jks | cut -d' ' -f1)" = "edc28baed22798f0e1f3b3a840494335971c626557bc3644ecb04b361a771ad7" ]; then
+            echo 'KEYSTORE_BASE64: صحيح'
+          else
+            echo 'KEYSTORE_BASE64: خاطئ (المحتوى المنسوخ لا يطابق المفتاح)'
             exit 1
           fi
+          # 2) هل كلمة المرور صحيحة؟
+          if ! keytool -list -keystore release-key.jks -storepass "$STORE_PASSWORD" > /dev/null 2>&1; then
+            echo 'STORE_PASSWORD: خاطئة'
+            exit 1
+          fi
+          echo 'STORE_PASSWORD: صحيحة'
+          # 3) هل اسم المفتاح صحيح؟ نعرض الأسماء الموجودة (ليست سراً)
+          echo "الأسماء الموجودة في المفتاح: $(keytool -list -keystore release-key.jks -storepass "$STORE_PASSWORD" 2>/dev/null | grep PrivateKeyEntry | cut -d, -f1)"
+          echo "طول KEY_ALIAS المدخل: ${#KEY_ALIAS} حرف"
+          if ! keytool -list -keystore release-key.jks -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" > /dev/null 2>&1; then
+            echo 'KEY_ALIAS: خاطئ، انظر الأسماء الموجودة أعلاه'
+            exit 1
+          fi
+          echo 'KEY_ALIAS: صحيح'
           echo 'تم التحقق من مفتاح التوقيع بنجاح'
           printf 'storeFile=release-key.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
             "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > keystore.properties
