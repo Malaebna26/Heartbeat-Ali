@@ -54,7 +54,7 @@ jobs:
             exit 0
           fi
           echo "$KEYSTORE_BASE64" | base64 -d > release-key.jks
-          printf 'storeFile=../release-key.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+          printf 'storeFile=release-key.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
             "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > keystore.properties
 
       - name: الفحص والاختبار (Lint)
