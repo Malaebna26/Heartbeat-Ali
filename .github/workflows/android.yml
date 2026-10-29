@@ -53,7 +53,18 @@ jobs:
             echo 'لا توجد أسرار توقيع: سيُبنى AAB غير موقّع'
             exit 0
           fi
-          echo "$KEYSTORE_BASE64" | base64 -d > release-key.jks
+          # إزالة أي أسطر فارغة أو مسافات زائدة قد تأتي مع النسخ واللصق
+          clean() { printf '%s' "$1" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'; }
+          STORE_PASSWORD=$(clean "$STORE_PASSWORD")
+          KEY_PASSWORD=$(clean "$KEY_PASSWORD")
+          KEY_ALIAS=$(clean "$KEY_ALIAS")
+          echo "$KEYSTORE_BASE64" | tr -d ' \r\n' | base64 -d > release-key.jks
+          if ! keytool -list -keystore release-key.jks -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" > /dev/null 2>&1; then
+            echo 'خطأ: تعذّر فتح مفتاح التوقيع بالسرّين STORE_PASSWORD و KEY_ALIAS، أو الاسم غير موجود.'
+            echo 'تحقق من قيمة هذه الأسرار في إعدادات GitHub (بدون مسافات أو أسطر زائدة).'
+            exit 1
+          fi
+          echo 'تم التحقق من مفتاح التوقيع بنجاح'
           printf 'storeFile=release-key.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
             "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > keystore.properties
 
