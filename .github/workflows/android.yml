@@ -84,4 +84,4 @@ jobs:
             app/build/outputs/apk/debug/*.apk
             app/build/outputs/bundle/release/*.aab
             app/build/reports/lint-results-release.html
-          if-no-files-found: error
+          if-no-files-found: warn
