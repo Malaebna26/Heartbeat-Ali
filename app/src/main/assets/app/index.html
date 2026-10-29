@@ -82,6 +82,10 @@
         <small>يقبل Excel (.xlsx) أو CSV. يبحث عن الأعمدة بعناوينها: «اللقب والاسم»، «الجنس»، «تاريخ الميلاد»، ويقرأ كل الكشوف الموجودة في الملف.</small>
       </label>
     </div>
+    <div class="field" style="margin-top:12px">
+      <label for="fallbackClass" style="font-weight:700">اسم القسم (يُستعمل إن لم يذكر الملف اسم القسم)</label>
+      <input id="fallbackClass" placeholder="مثال: قسم 2 متوسط" style="width:100%;padding:10px;border:2px solid #dfe6e9;border-radius:12px;font-family:inherit">
+    </div>
     <p style="margin-top:12px"><input type="file" id="file" accept=".xlsx,.csv"></p>
     <details style="margin-top:12px">
       <summary style="cursor:pointer;font-weight:700;color:#e84393">أو الصق الجدول مباشرة (إذا لم يعمل رفع الملف)</summary>
@@ -110,10 +114,11 @@
 
     <div class="toolbar">
       <input type="search" id="search" placeholder="🔎 ابحث باسم التلميذ...">
+      <select id="classFilter" style="padding:10px;border:2px solid #dfe6e9;border-radius:12px;font-family:inherit;font-size:.95rem;font-weight:700;background:#fff"></select>
       <button class="btn" id="addExtra">➕ تلميذ غير مسجل</button>
       <button class="btn green" id="csv">⬇️ تصدير CSV</button>
       <button class="btn gray" id="clear">🗑️ مسح القياسات</button>
-      <button class="btn red" id="removeList">🗑️ حذف القائمة</button>
+      <button class="btn red" id="removeList">🗑️ حذف القسم المختار</button>
     </div>
 
     <div class="table-wrap">
@@ -121,7 +126,7 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>اللقب والاسم</th>
+            <th>القسم</th><th>اللقب والاسم</th>
             <th>الجنس</th>
             <th>العمر</th>
             <th>قبل النشاط</th>
@@ -177,6 +182,7 @@
   const norm = s => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
 
   let pupils = [];
+  let currentClass = 'all';
   let pendingList = null;
 
   // ===== العمر والبيانات =====
@@ -190,9 +196,9 @@
     return a;
   }
 
-  function newPupil(name, g, dob, extra) {
+  function newPupil(name, g, dob, extra, cls) {
     return {
-      name, g, dob, age: ageFromDob(dob), ageEdited: false,
+      name, g, dob, cls: cls || 'بدون قسم', age: ageFromDob(dob), ageEdited: false,
       pre: '', post: '', rec: '', protocol: 'cooldown', symptoms: false, extra
     };
   }
@@ -345,7 +351,25 @@
     return '';
   }
 
-  function parseRoster(sheets) {
+  function cleanClassName(t) {
+    return norm(t).replace(/قوائم\s*تلاميذ/g, '').replace(/^[\s:\-–]+/, '').trim();
+  }
+
+  // يبحث عن عنوان القسم (مثل «قوائم تلاميذ قسم 1 متوسط») فوق رأس الجدول
+  function findClassName(A, r) {
+    for (let rr = r; rr >= Math.max(0, r - 8); rr--) {
+      for (const cell of (A[rr] || [])) {
+        const t = norm(cell);
+        if (t && t.length < 80 && /قسم/.test(t)) {
+          const name = cleanClassName(t);
+          if (name) return name;
+        }
+      }
+    }
+    return '';
+  }
+
+  function parseRoster(sheets, fallbackClass) {
     const list = [], seen = new Set();
     let tables = 0, tablesNoDob = 0, tablesNoGender = 0;
     const seenHeaders = [];
@@ -368,7 +392,7 @@
         };
         const gc = nearest(GENDER_RE), dc = nearest(DOB_RE);
         if (gc < 0 && dc < 0) return;
-        heads.push({ r, c, gc, dc });
+        heads.push({ r, c, gc, dc, cls: findClassName(A, r) || fallbackClass || 'قسم غير مسمى' });
       }));
       heads.forEach((h, idx) => {
         tables++;
@@ -381,10 +405,10 @@
           if (name.length < 3 || !/[A-Za-z\u0600-\u06FF]/.test(name) || EXCLUDE.test(name)) continue;
           const g = h.gc >= 0 ? parseGender(rowR[h.gc]) : '';
           const dob = h.dc >= 0 ? parseDob(rowR[h.dc]) : '';
-          const key = name + '|' + g + '|' + dob;
+          const key = h.cls + '|' + name + '|' + g + '|' + dob;
           if (seen.has(key)) continue;
           seen.add(key);
-          list.push([name, g, dob]);
+          list.push([name, g, dob, h.cls]);
         }
       });
     }
@@ -428,6 +452,7 @@
       : esc(p.name);
     return `<tr data-i="${i}" class="${p.extra ? 'extra' : ''}">
       <td class="g">${i + 1}</td>
+      <td class="g">${esc(p.cls)}</td>
       <td class="name">${nameCell}</td>
       <td class="g">${gender}</td>
       <td><input type="number" data-f="age" min="6" max="18" value="${p.age == null ? '' : p.age}"></td>
@@ -455,9 +480,14 @@
         (r.flags.length ? `<div class="flags">${r.flags.map(esc).join('<br>')}</div>` : '');
   }
 
+  function visiblePupils() {
+    return currentClass === 'all' ? pupils : pupils.filter(p => p.cls === currentClass);
+  }
+
   function updateStats() {
-    const c = { total: pupils.length, done: 0, ok: 0, follow: 0, refer: 0 };
-    pupils.forEach(p => {
+    const list = visiblePupils();
+    const c = { total: list.length, done: 0, ok: 0, follow: 0, refer: 0 };
+    list.forEach(p => {
       const s = classify(p).status;
       if (s === 'ok' || s === 'follow' || s === 'refer') { c.done++; c[s]++; }
     });
@@ -472,13 +502,25 @@
     const q = $('search').value.trim();
     document.querySelectorAll('#rows tr').forEach(tr => {
       const p = pupils[Number(tr.dataset.i)];
-      tr.classList.toggle('hidden', q !== '' && !(p && p.name.includes(q)));
+      const inClass = currentClass === 'all' || (p && p.cls === currentClass);
+      const matches = q === '' || (p && p.name.includes(q));
+      tr.classList.toggle('hidden', !(inClass && matches));
     });
   }
 
+  function renderClassFilter() {
+    const counts = {};
+    pupils.forEach(p => { counts[p.cls] = (counts[p.cls] || 0) + 1; });
+    if (currentClass !== 'all' && !counts[currentClass]) currentClass = 'all';
+    $('classFilter').innerHTML = `<option value="all">كل الأقسام (${pupils.length})</option>` +
+      Object.keys(counts).map(n => `<option value="${esc(n)}">${esc(n)} (${counts[n]})</option>`).join('');
+    $('classFilter').value = currentClass;
+  }
+
   function renderAll() {
+    renderClassFilter();
     if (pupils.length === 0) {
-      $('rows').innerHTML = '<tr><td class="empty" colspan="10">لا توجد قائمة بعد. ارفع ملف قائمة التلاميذ من الأعلى، أو أضف تلميذاً يدوياً.</td></tr>';
+      $('rows').innerHTML = '<tr><td class="empty" colspan="11">لا توجد قائمة بعد. ارفع ملف قائمة التلاميذ من الأعلى، أو أضف تلميذاً يدوياً.</td></tr>';
     } else {
       $('rows').innerHTML = pupils.map((p, i) => rowHtml(p, i)).join('');
       pupils.forEach((_, i) => refreshRow(i));
@@ -524,7 +566,7 @@
   $('search').addEventListener('input', applySearch);
 
   $('addExtra').addEventListener('click', () => {
-    pupils.push(newPupil('', '', '', true));
+    pupils.push(newPupil('', '', '', true, currentClass === 'all' ? '' : currentClass));
     renderAll();
     const last = document.querySelector('#rows tr:last-child [data-f="name"]');
     if (last) last.focus();
@@ -557,7 +599,7 @@
     pendingList = null;
     $('previewBox').style.display = 'none';
     {
-      const res = parseRoster(sheets);
+      const res = parseRoster(sheets, $('fallbackClass').value.trim());
       if (!res.list.length) {
         const found = res.seenHeaders.length ? `<br>العناوين التي وجدتها في الملف: ${res.seenHeaders.map(esc).join(' | ')}` : '<br>لم أجد أي نص في الملف.';
         $('importMsg').innerHTML = 'لم أجد جدولاً للتلاميذ. يجب أن يحتوي الملف على عمود عنوانه «اللقب والاسم» أو «الاسم»، بجانب عمود «الجنس» أو «تاريخ الميلاد».' + found;
@@ -596,20 +638,26 @@
     catch (err) { showMsg('تعذر تحليل الجدول: ' + err.message, 'err'); }
   });
 
-  // تطبيق القائمة مباشرة، مع تأكيد فقط إذا كانت هناك قياسات مسجلة في القائمة الحالية
+  function hasMeasurement(p) { return p.pre !== '' || p.post !== '' || p.rec !== '' || p.symptoms; }
+
+  // استيراد الأقسام: كل قسم مستقل، ولا يُستبدل إلا القسم الذي يُستورد بنفس الاسم
   function applyPending(sourceName) {
     if (!pendingList) return;
-    const hasData = pupils.some(p => p.pre !== '' || p.post !== '' || p.rec !== '' || p.symptoms);
-    if (hasData && !confirm('ستُستبدل القائمة الحالية، وتفقد القياسات المسجلة فيها. هل تريد المتابعة؟')) {
-      showMsg('لم تُستبدل القائمة.', 'info');
+    const incoming = [...new Set(pendingList.list.map(x => x[3]))];
+    const clash = incoming.filter(c => pupils.some(p => p.cls === c && hasMeasurement(p)));
+    if (clash.length && !confirm(`هذه الأقسام فيها قياسات وستُستبدل قوائمها: ${clash.join('، ')}. هل تريد المتابعة؟`)) {
       pendingList = null;
+      $('previewBox').style.display = 'none';
+      showMsg('لم يُستورد شيء.', 'info');
       return;
     }
     const n = pendingList.list.length;
-    pupils = pendingList.list.map(([name, g, dob]) => newPupil(name, g, dob, false));
+    pupils = pupils.filter(p => !incoming.includes(p.cls));
+    pupils.push(...pendingList.list.map(([name, g, dob, cls]) => newPupil(name, g, dob, false, cls)));
     pendingList = null;
     $('previewBox').style.display = 'none';
-    showMsg(`تم تحميل ${n} تلميذاً من «${sourceName}» وظهروا في الجدول أدناه.`, 'ok');
+    currentClass = incoming.length === 1 ? incoming[0] : 'all';
+    showMsg(`تم استيراد ${n} تلميذاً في ${incoming.length} قسم من «${sourceName}»: ${incoming.join('، ')}.`, 'ok');
     renderAll();
   }
 
@@ -621,38 +669,47 @@
   });
 
   // ===== تصدير ومسح =====
+  $('classFilter').addEventListener('change', e => {
+    currentClass = e.target.value;
+    updateStats();
+    applySearch();
+  });
+
   $('csv').addEventListener('click', () => {
-    const header = ['الاسم', 'الجنس', 'العمر', 'قبل النشاط', 'فور التوقف', 'بعد دقيقة', 'طريقة التوقف', 'أعراض', 'النتيجة', 'الملاحظات'];
-    const lines = pupils.map(p => {
+    const header = ['القسم', 'الاسم', 'الجنس', 'العمر', 'قبل النشاط', 'فور التوقف', 'بعد دقيقة', 'طريقة التوقف', 'أعراض', 'النتيجة', 'الملاحظات'];
+    const lines = visiblePupils().map(p => {
       const r = classify(p);
       const g = p.g === 'm' ? 'ذكر' : p.g === 'f' ? 'أنثى' : '';
       return [
-        p.name, g, (p.age == null ? '' : p.age), p.pre, p.post, p.rec,
+        p.cls, p.name, g, (p.age == null ? '' : p.age), p.pre, p.post, p.rec,
         p.protocol === 'abrupt' ? 'توقف فوري' : 'تهدئة',
         p.symptoms ? 'نعم' : 'لا',
         r.status ? LABELS[r.status] : '',
         r.flags.join(' | ')
       ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
     });
-    const csv = '﻿' + [header.map(h => `"${h}"`).join(','), ...lines].join('\n');
+    const csv = '\uFEFF' + [header.map(h => `"${h}"`).join(','), ...lines].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'فحص_النبضات.csv';
+    a.download = (currentClass === 'all' ? 'فحص_النبضات_كل_الأقسام' : 'فحص_النبضات_' + currentClass) + '.csv';
     a.click();
   });
 
   $('clear').addEventListener('click', () => {
-    if (!confirm('سيتم مسح جميع القياسات وتبقى أسماء التلاميذ. هل تريد المتابعة؟')) return;
-    pupils.forEach(p => { p.pre = ''; p.post = ''; p.rec = ''; p.symptoms = false; p.protocol = 'cooldown'; });
+    const scope = currentClass === 'all' ? 'جميع الأقسام' : currentClass;
+    if (!confirm(`سيتم مسح قياسات ${scope}، وتبقى أسماء التلاميذ. هل تريد المتابعة؟`)) return;
+    visiblePupils().forEach(p => { p.pre = ''; p.post = ''; p.rec = ''; p.symptoms = false; p.protocol = 'cooldown'; });
     renderAll();
   });
 
   $('removeList').addEventListener('click', () => {
-    if (!confirm('سيتم حذف القائمة وجميع القياسات من هذا الجهاز. هل أنت متأكد؟')) return;
-    pupils = [];
+    const scope = currentClass === 'all' ? 'جميع الأقسام' : currentClass;
+    if (!confirm(`سيتم حذف ${scope} وقياساته من هذا الجهاز. هل أنت متأكد؟`)) return;
+    pupils = currentClass === 'all' ? [] : pupils.filter(p => p.cls !== currentClass);
+    currentClass = 'all';
     renderAll();
-    showMsg('تم حذف القائمة.', 'info');
+    showMsg('تم الحذف.', 'info');
   });
 
   load();
