@@ -64,6 +64,19 @@
   .rules b { color:#e84393; }
   .note { background:#ffeaa7; border-radius:12px; padding:12px; font-size:.88rem; line-height:1.7; margin-top:10px; }
   @media (max-width:850px) { .stats { grid-template-columns:repeat(2,1fr); } }
+
+  /* عداد الدقيقة */
+  .timer-card { text-align: center; }
+  .timer-display {
+    font-size: 4.5rem; font-weight: 800; line-height: 1.1; margin: 6px 0 4px;
+    font-variant-numeric: tabular-nums; color: #e84393;
+  }
+  .timer-display.running { color: #0984e3; }
+  .timer-display.done { color: #00b894; animation: tpulse 1s infinite; }
+  @keyframes tpulse { 50% { transform: scale(1.06); } }
+  .timer-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+  .timer-actions .btn { flex: 0 1 200px; }
+  #tMsg { margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -101,6 +114,16 @@
         <button class="btn gray" id="cancelPreview">إلغاء</button>
       </div>
     </div>
+  </section>
+
+  <section class="card timer-card" id="timerCard">
+    <h2 style="justify-content:center">⏱️ عداد الدقيقة</h2>
+    <div class="timer-display" id="tDisplay" aria-live="polite">01:00</div>
+    <div class="timer-actions">
+      <button class="btn green" id="tStart">▶️ ابدأ دقيقة</button>
+      <button class="btn gray" id="tReset">🔄 إعادة</button>
+    </div>
+    <div class="msg" id="tMsg"></div>
   </section>
 
   <section class="card">
@@ -711,6 +734,95 @@
     renderAll();
     showMsg('تم الحذف.', 'info');
   });
+
+
+  // ===== عداد الدقيقة =====
+  const TIMER_TOTAL = 60000;
+  let tRemaining = TIMER_TOTAL;   // بالميلي ثانية عند التوقف
+  let tEnd = 0;                   // وقت الانتهاء عند التشغيل
+  let tTick = null;
+
+  function fmtTime(ms) {
+    const s = Math.ceil(ms / 1000);
+    return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+  }
+
+  function tSetMsg(text, kind) {
+    const m = $('tMsg');
+    m.textContent = text || '';
+    m.className = 'msg' + (text ? ' show ' + (kind || 'info') : '');
+  }
+
+  function tRender(state) {
+    const d = $('tDisplay');
+    d.textContent = fmtTime(tRemaining);
+    d.className = 'timer-display' + (state ? ' ' + state : '');
+    $('tStart').textContent = tTick ? '⏸️ إيقاف مؤقت' : (tRemaining < TIMER_TOTAL && tRemaining > 0 ? '▶️ متابعة' : '▶️ ابدأ دقيقة');
+  }
+
+  function tBeep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.45, 0.9].forEach(offset => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.frequency.value = 880;
+        o.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.3, ctx.currentTime + offset);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.35);
+        o.start(ctx.currentTime + offset);
+        o.stop(ctx.currentTime + offset + 0.4);
+      });
+    } catch (e) { /* الصوت غير متاح: نكتفي بالاهتزاز والرسالة */ }
+    try { if (navigator.vibrate) navigator.vibrate([400, 200, 400]); } catch (e) {}
+  }
+
+  function tStop() {
+    clearInterval(tTick);
+    tTick = null;
+  }
+
+  function tFinish() {
+    tStop();
+    tRemaining = 0;
+    tRender('done');
+    tSetMsg('⏰ انتهت الدقيقة. سجّل النبض الآن في الجدول.', 'ok');
+    tBeep();
+  }
+
+  function tLoop() {
+    tRemaining = Math.max(0, tEnd - Date.now());
+    if (tRemaining <= 0) { tFinish(); return; }
+    tRender('running');
+  }
+
+  $('tStart').addEventListener('click', () => {
+    if (tTick) {
+      // إيقاف مؤقت
+      tStop();
+      tRender('');
+      tSetMsg('تم الإيقاف مؤقتاً.', 'info');
+      return;
+    }
+    if (tRemaining <= 0) tRemaining = TIMER_TOTAL;
+    tEnd = Date.now() + tRemaining;
+    tSetMsg('');
+    tLoop();
+    tTick = setInterval(tLoop, 250);
+  });
+
+  $('tReset').addEventListener('click', () => {
+    tStop();
+    tRemaining = TIMER_TOTAL;
+    tSetMsg('');
+    tRender('');
+  });
+
+  // عند عودة الصفحة للواجهة بعد قفل الشاشة نحسب الوقت من جديد
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && tTick) tLoop();
+  });
+
+  tRender('');
 
   load();
   renderAll();
