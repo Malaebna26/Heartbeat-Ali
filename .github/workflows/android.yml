@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -76,12 +76,14 @@ jobs:
           fi
           echo 'لا توجد صلاحية INTERNET'
 
-      - name: رفع الملفات الناتجة
-        uses: actions/upload-artifact@v4
-        with:
-          name: nabadat-rabie-builds
-          path: |
-            app/build/outputs/apk/debug/*.apk
-            app/build/outputs/bundle/release/*.aab
-            app/build/reports/lint-results-release.html
-          if-no-files-found: warn
+      - name: نشر الملفات في Release (على الفرع الرئيسي فقط)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="build-${GITHUB_RUN_NUMBER}"
+          FILES=$(ls app/build/outputs/apk/debug/*.apk app/build/outputs/bundle/release/*.aab)
+          gh release create "$TAG" $FILES \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "نبضات ربيع - بناء $GITHUB_RUN_NUMBER" \
+            --notes "بناء تلقائي من الكوميت $GITHUB_SHA. APK للتجربة، وAAB للنشر (يحتاج توقيعاً قبل الرفع على Play)."
