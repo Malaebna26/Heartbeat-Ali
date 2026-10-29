@@ -1,6 +1,8 @@
 package com.example.nabadatrabie
 
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.webkit.ValueCallback
@@ -71,9 +73,16 @@ class MainActivity : ComponentActivity() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
                 assetLoader.shouldInterceptRequest(request.url)
 
-            // أي رابط خارج التطبيق لا يُفتح داخل WebView
-            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean =
-                request.url.host != APP_HOST
+            // الروابط الداخلية تُفتح داخل التطبيق، والخارجية (مثل فيسبوك) تُفتح في متصفح الجهاز
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                if (request.url.host == APP_HOST) return false
+                return try {
+                    startActivity(Intent(Intent.ACTION_VIEW, request.url))
+                    true
+                } catch (e: ActivityNotFoundException) {
+                    true
+                }
+            }
         }
 
         webView.webChromeClient = object : WebChromeClient() {
