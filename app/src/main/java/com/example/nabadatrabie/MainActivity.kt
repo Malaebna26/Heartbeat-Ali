@@ -1,10 +1,14 @@
 package com.example.nabadatrabie
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.print.PrintAttributes
+import android.print.PrintManager
+import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -57,6 +61,9 @@ class MainActivity : ComponentActivity() {
             v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             WindowInsetsCompat.CONSUMED
         }
+
+        // جسر الطباعة: يسمح للصفحة بفتح نافذة طباعة النظام (وفيها خيار حفظ PDF)
+        webView.addJavascriptInterface(PrintBridge(), "AndroidPrint")
 
         webView.settings.apply {
             javaScriptEnabled = true          // الصفحة تعتمد على JavaScript
@@ -137,6 +144,18 @@ class MainActivity : ComponentActivity() {
         filePathCallback = null
         webView.destroy()
         super.onDestroy()
+    }
+
+    /** يُستدعى من الصفحة فقط، ولا يكشف أي بيانات أخرى. */
+    inner class PrintBridge {
+        @JavascriptInterface
+        fun printReport() {
+            webView.post {
+                val printManager = getSystemService(Context.PRINT_SERVICE) as PrintManager
+                val adapter = webView.createPrintDocumentAdapter("تقرير نبضات ربيع")
+                printManager.print("تقرير نبضات ربيع", adapter, PrintAttributes.Builder().build())
+            }
+        }
     }
 
     companion object {

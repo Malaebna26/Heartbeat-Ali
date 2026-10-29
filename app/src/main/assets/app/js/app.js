@@ -340,7 +340,8 @@ $('report').addEventListener('click', () => {
     `<th>${esc(t('th.age'))}</th><th>${esc(t('th.pre'))}</th><th>${esc(t('th.post'))}</th><th>${esc(t('th.rec'))}</th>` +
     `<th>${esc(t('th.result'))}</th><th>${esc(t('th.symptoms'))}</th></tr></thead><tbody>${rows}</tbody></table>` +
     `<p class="report-foot">${esc(t('report.footer'))}</p>`;
-  window.print();
+  // داخل تطبيق أندرويد: نافذة الطباعة النظامية (حفظ PDF). في المتصفح: window.print()
+  if (window.AndroidPrint) window.AndroidPrint.printReport(); else window.print();
 });
 
 $('backup').addEventListener('click', () => {
