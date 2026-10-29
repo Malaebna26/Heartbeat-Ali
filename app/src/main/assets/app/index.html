@@ -65,6 +65,16 @@
   .note { background:#ffeaa7; border-radius:12px; padding:12px; font-size:.88rem; line-height:1.7; margin-top:10px; }
   @media (max-width:850px) { .stats { grid-template-columns:repeat(2,1fr); } }
 
+  /* التبويبات والفحص الفردي */
+  .tabs { display:flex; gap:10px; margin-bottom:18px; }
+  .tab { flex:1; padding:14px; border:none; border-radius:16px; font-family:inherit; font-weight:700; font-size:1.02rem; background:#fff; color:#6c5ce7; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.12); }
+  .tab.active { background:linear-gradient(135deg,#e84393,#0984e3); color:#fff; }
+  .solo-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+  .solo-grid label { display:block; font-weight:700; margin-bottom:4px; font-size:.92rem; }
+  .solo-grid input, .solo-grid select { width:100%; padding:10px; border:2px solid #dfe6e9; border-radius:12px; font-family:inherit; font-size:1rem; }
+  .solo-result { margin-top:16px; text-align:center; }
+  .solo-result .badge { font-size:1.1rem; padding:8px 16px; }
+  .solo-result .flags { margin-top:8px; }
   /* عداد الدقيقة */
   .timer-card { text-align: center; }
   .timer-display {
@@ -83,10 +93,26 @@
 <div class="wrap">
   <div class="msg err show" id="jsWarn">⚠️ المتصفح لم يشغّل الصفحة. افتحها بمتصفح Chrome محدّث، أو حدّث التطبيق الحالي.</div>
   <header>
-    <h1>🫀 فحص نبضات تلاميذ القسم</h1>
-    <p>ارفع قائمة التلاميذ، ثم أدخل القياسات مباشرة في الجدول</p>
+    <h1>🫀 نبضات ربيع</h1>
+    <p>اختر الوضع: فحص قائمة تلاميذ، أو فحص فردي لشخص واحد</p>
   </header>
 
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-view="teachers" role="tab">👩‍🏫 للأساتذة (قائمة تلاميذ)</button>
+    <button class="tab" data-view="solo" role="tab">🙋 فحص فردي</button>
+  </div>
+
+  <section class="card timer-card" id="timerCard">
+    <h2 style="justify-content:center">⏱️ عداد الدقيقة</h2>
+    <div class="timer-display" id="tDisplay" aria-live="polite">01:00</div>
+    <div class="timer-actions">
+      <button class="btn green" id="tStart">▶️ ابدأ دقيقة</button>
+      <button class="btn gray" id="tReset">🔄 إعادة</button>
+    </div>
+    <div class="msg" id="tMsg"></div>
+  </section>
+
+  <div id="viewTeachers">
   <section class="card">
     <h2>📂 قائمة التلاميذ</h2>
     <div class="upload">
@@ -114,16 +140,6 @@
         <button class="btn gray" id="cancelPreview">إلغاء</button>
       </div>
     </div>
-  </section>
-
-  <section class="card timer-card" id="timerCard">
-    <h2 style="justify-content:center">⏱️ عداد الدقيقة</h2>
-    <div class="timer-display" id="tDisplay" aria-live="polite">01:00</div>
-    <div class="timer-actions">
-      <button class="btn green" id="tStart">▶️ ابدأ دقيقة</button>
-      <button class="btn gray" id="tReset">🔄 إعادة</button>
-    </div>
-    <div class="msg" id="tMsg"></div>
   </section>
 
   <section class="card">
@@ -178,6 +194,25 @@
     <div class="note" style="background:#dfe6e9">
       🔒 القائمة والقياسات تُحفظ في متصفح هذا الجهاز فقط، ولا يُرسل الملف أي بيانات إلى أي خادم. قائمة التلاميذ تحتوي أسماء الأطفال وتواريخ ميلادهم، فلا تشاركها. صدّر ملف CSV للاحتفاظ بنسخة. العمر محسوب من تاريخ الميلاد بتاريخ اليوم، ويمكن تعديله يدوياً.
     </div>
+  </section>
+
+  </div>
+
+  <section class="card" id="viewSolo" hidden>
+    <h2>🙋 فحص فردي</h2>
+    <p style="color:#636e72;margin-bottom:14px">أدخل بيانات الشخص وقياسات نبضه. لا يحتاج إلى قائمة تلاميذ، والنتيجة تُحسب بالقواعد نفسها.</p>
+    <div class="solo-grid">
+      <div><label for="sName">الاسم (اختياري)</label><input id="sName" placeholder="الاسم"></div>
+      <div><label for="sGender">الجنس</label><select id="sGender"><option value="">—</option><option value="m">ذكر</option><option value="f">أنثى</option></select></div>
+      <div><label for="sAge">العمر (سنة)</label><input id="sAge" type="number" min="6" max="18"></div>
+      <div><label for="sPre">نبض الراحة قبل النشاط</label><input id="sPre" type="number" min="30" max="200"></div>
+      <div><label for="sPost">النبض فور التوقف</label><input id="sPost" type="number" min="30" max="240"></div>
+      <div><label for="sRec">النبض بعد دقيقة</label><input id="sRec" type="number" min="30" max="240"></div>
+      <div><label for="sProtocol">طريقة التوقف</label><select id="sProtocol"><option value="cooldown">تهدئة بالمشي</option><option value="abrupt">توقف فوري</option></select></div>
+      <div><label><input type="checkbox" id="sSymptoms" style="width:auto"> ظهرت أعراض (دوخة، ألم صدر، ضيق نفس)</label></div>
+    </div>
+    <div class="solo-result" id="soloResult"></div>
+    <div class="preview-actions"><button class="btn gray" id="sClear">🗑️ مسح الحقول</button></div>
   </section>
 
   <section class="card" style="text-align:center">
@@ -823,6 +858,48 @@
   });
 
   tRender('');
+
+
+  // ===== التبويبات =====
+  function showView(v) {
+    $('viewTeachers').hidden = v !== 'teachers';
+    $('viewSolo').hidden = v !== 'solo';
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  }
+  document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+
+  // ===== الفحص الفردي =====
+  function readSolo() {
+    const age = $('sAge').value === '' ? null : Number($('sAge').value);
+    return {
+      name: $('sName').value.trim(), g: $('sGender').value, cls: 'فردي',
+      age, ageEdited: true, pre: $('sPre').value, post: $('sPost').value, rec: $('sRec').value,
+      protocol: $('sProtocol').value, symptoms: $('sSymptoms').checked
+    };
+  }
+
+  function renderSolo() {
+    const p = readSolo();
+    const r = classify(p);
+    const box = $('soloResult');
+    if (!r.status) {
+      box.innerHTML = '<span class="badge none">—</span><div class="flags">أدخل القياسات لتظهر النتيجة</div>';
+      return;
+    }
+    box.innerHTML = `<span class="badge ${r.status}">${LABELS[r.status]}</span>` +
+      (r.flags.length ? `<div class="flags">${r.flags.map(esc).join('<br>')}</div>` : '');
+  }
+
+  ['sName','sGender','sAge','sPre','sPost','sRec','sProtocol','sSymptoms'].forEach(id =>
+    $(id).addEventListener('input', renderSolo));
+  $('sProtocol').addEventListener('change', renderSolo);
+  $('sSymptoms').addEventListener('change', renderSolo);
+  $('sClear').addEventListener('click', () => {
+    ['sName','sAge','sPre','sPost','sRec'].forEach(id => $(id).value = '');
+    $('sGender').value = ''; $('sProtocol').value = 'cooldown'; $('sSymptoms').checked = false;
+    renderSolo();
+  });
+  renderSolo();
 
   load();
   renderAll();
