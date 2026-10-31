@@ -115,14 +115,17 @@
   .dev-credit .dev-name { font-size:1.5rem; font-weight:800; letter-spacing:.5px; direction:ltr; text-shadow:0 2px 8px rgba(0,0,0,.2); }
   .dev-credit .dev-role { font-size:1rem; font-weight:600; opacity:.92; margin-top:4px; direction:ltr; }
   /* سجل الجلسات */
-  dialog { border:none; border-radius:20px; padding:22px; width:min(780px, 94vw); max-height:90vh; box-shadow:0 20px 60px rgba(0,0,0,.35); }
+  dialog { margin:auto; border:none; border-radius:20px; padding:22px; width:min(780px, 94vw); max-height:90vh; box-shadow:0 20px 60px rgba(0,0,0,.35); }
   dialog::backdrop { background:rgba(45,52,54,.55); }
   dialog h2 { color:#e84393; font-size:1.2rem; margin-bottom:10px; }
   .chart-box { margin-bottom:14px; }
   .chart-box h3 { font-size:.98rem; color:#2d3436; }
   .legend { font-size:.82rem; color:#636e72; text-align:center; margin-top:4px; }
   .hist-scroll { overflow:auto; max-height:30vh; border:1px solid #eee; border-radius:12px; }
-  .hist-table { min-width:0; font-size:.9rem; }
+  .hist-table { min-width:0; font-size:.82rem; }
+  .hist-table th { white-space:normal; padding:4px 3px; }
+  .hist-table td { white-space:nowrap; padding:5px 3px; }
+  .hist-table .badge { font-size:.68rem; padding:2px 7px; }
   .hist-none { color:#636e72; line-height:1.8; padding:16px 0; }
   /* الوضع الليلي: على الشاشة فقط، ولا يؤثر على الطباعة */
   @media screen {

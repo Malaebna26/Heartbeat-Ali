@@ -224,6 +224,12 @@ function fmtDate(iso) {
   return d.toLocaleDateString(LANG === 'fr' ? 'fr-FR' : 'ar-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' });
 }
 
+function fmtDateShort(iso) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleDateString(LANG === 'fr' ? 'fr-FR' : 'ar-u-nu-latn', { month: '2-digit', day: '2-digit' });
+}
+
 const CH = { W: 560, H: 220, P: 34, MIN: 40, MAX: 200 };
 
 function chartX(k, n) { return CH.P + (n <= 1 ? (CH.W - 2 * CH.P) / 2 : k * (CH.W - 2 * CH.P) / (n - 1)); }
@@ -266,7 +272,7 @@ function chartDrop(h) {
   });
   const th12 = base - 12 * scale;
   const thLine = `<line x1="${CH.P}" x2="${CH.W - CH.P}" y1="${th12}" y2="${th12}" stroke="#d63031" stroke-dasharray="5 4"/>` +
-    `<text x="${CH.W - CH.P}" y="${th12 - 4}" font-size="11" text-anchor="end" fill="#d63031">${esc(t('hist.threshold'))}</text>`;
+    `<text x="${CH.W / 2}" y="14" font-size="11" text-anchor="middle" fill="#d63031">- - - ${esc(t('hist.threshold'))}</text>`;
   const labels = h.map((s, k) => `<text x="${chartX(k, n)}" y="${CH.H - 8}" font-size="11" text-anchor="middle" fill="#8b95a5">${k + 1}</text>`).join('');
   return `<svg viewBox="0 0 ${CH.W} ${CH.H}" width="100%" role="img">${thLine}${bars}${labels}</svg>`;
 }
@@ -284,7 +290,7 @@ function openHistory(i) {
       `<div class="chart-box"><h3>${esc(t('hist.chart2'))}</h3>${chartDrop(h)}</div>` +
       `<div class="hist-scroll"><table class="hist-table"><thead><tr><th>#</th><th>${esc(t('hist.date'))}</th>` +
       `<th>${esc(t('th.pre'))}</th><th>${esc(t('th.post'))}</th><th>${esc(t('th.rec'))}</th><th>${esc(t('hist.status'))}</th></tr></thead><tbody>` +
-      h.map((s, k) => `<tr><td>${k + 1}</td><td>${esc(fmtDate(s.d))}</td><td>${s.pre}</td><td>${s.post}</td><td>${s.rec}</td><td>${esc(s.status ? statusText(s.status) : '')}</td></tr>`).join('') +
+      h.map((s, k) => `<tr><td>${k + 1}</td><td title="${esc(fmtDate(s.d))}">${esc(fmtDateShort(s.d))}</td><td>${s.pre}</td><td>${s.post}</td><td>${s.rec}</td><td>${s.status ? `<span class="badge ${s.status}">${esc(statusText(s.status))}</span>` : ''}</td></tr>`).join('') +
       '</tbody></table></div>';
   }
   $('histBody').innerHTML = html;

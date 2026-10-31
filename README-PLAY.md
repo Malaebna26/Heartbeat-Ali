@@ -9,7 +9,7 @@
 | البند | ملاحظات |
 |---|---|
 | حساب Google Play Console | رسوم تسجيل لمرة واحدة (25 دولاراً). يشترط Google التحقق من الهوية. |
-| معرّف تطبيق فريد `applicationId` | `com.example...` مرفوض في Play. اختر معرّفاً خاصاً بك مثل `dz.tonnom.nabadatrabie`، وغيّره في `app/build.gradle.kts` (في `namespace` و`applicationId`). |
+| معرّف تطبيق فريد `applicationId` | تم ضبطه على `dz.alidz.nabadatrabie`. لا يُغيَّر بعد أول رفع على Play |
 | مفتاح التوقيع (keystore) | أنشئه مرة واحدة واحتفظ به ونسخة احتياطية منه؛ فقدانه يمنعك من التحديث. |
 | رابط سياسة خصوصية عام | يجب أن يكون متاحاً على الإنترنت بعنوان URL. ملف `privacy.html` جاهز، وارفعه على موقع أو GitHub Pages. |
 | بريد دعم | يظهر للمستخدمين في صفحة المتجر. |
@@ -64,19 +64,44 @@ keytool -genkeypair -v -keystore release-key.jks -alias nabadat-release -keyalg 
 **العنوان:** نبضات ربيع (لا يتجاوز 30 حرفاً)
 
 **وصف قصير (لا يتجاوز 80 حرفاً):**
-أداة فرز أولي لنبضات التلاميذ، تعمل دون إنترنت.
+أداة فرز أولي لنبضات التلاميذ للمعلمين، تعمل دون إنترنت.
 
-**وصف كامل:**
+**وصف كامل (العربية):**
 نبضات ربيع أداة مساعدة للمعلمين لتسجيل نبض التلاميذ قبل النشاط وبعده، وإجراء فرز أولي للنتائج.
-- استيراد قائمة التلاميذ من ملف Excel أو CSV، أو لصقها مباشرة.
-- إدخال القياسات في الجدول، ونتيجة فورية لكل تلميذ.
-- تصدير النتائج إلى ملف CSV.
-- يعمل بالكامل دون إنترنت، ولا يرسل أي بيانات.
+- استيراد قوائم التلاميذ من ملف Excel أو CSV، مع فصل كل قسم عن الآخر.
+- إدخال القياسات في الجدول ونتيجة فورية لكل تلميذ.
+- عداد دقيقة مدمج بتنبيه صوتي واهتزاز.
+- سجل لكل تلميذ مع رسوم بيانية لتطور النبض والتعافي عبر الجلسات.
+- تقرير للقسم يمكن حفظه PDF، وتصدير النتائج CSV.
+- نسخ احتياطي واستعادة من ملف.
+- فحص فردي لشخص واحد دون قائمة.
+- واجهة بالعربية والفرنسية، ووضع نهاري وليلي.
+- يعمل بالكامل دون إنترنت، ولا يرسل أي بيانات، وكل ما تُدخله يبقى على جهازك.
 
-تنبيه: التطبيق أداة فرز أولي وليس تشخيصاً طبياً. لا يغني عن الفحص الطبي، والنتائج تُراجع من طبيب مختص.
+تنبيه: التطبيق ليس جهازاً طبياً ولا يشخّص ولا يعالج ولا يمنع أي حالة طبية. هو أداة فرز أولي فقط. استشر دائماً طبيباً أو مختصاً صحياً للتشخيص أو العلاج أو أي نصيحة طبية، ولا تعتمد على نتائج التطبيق وحدها.
+This app is not a medical device and does not diagnose, treat, cure, or prevent any medical condition. Always consult a healthcare professional for medical advice.
+
+**Description courte (80 caractères max) :**
+Tri préliminaire du pouls des élèves pour enseignants, sans Internet.
+
+**Description complète (Français) :**
+Nabadat Rabie aide les enseignants à noter le pouls des élèves avant et après l'effort et à faire un premier tri des résultats.
+- Import des listes d'élèves depuis Excel ou CSV, chaque classe séparée.
+- Saisie des mesures dans un tableau avec résultat immédiat.
+- Minuterie d'une minute avec alerte sonore et vibration.
+- Historique par élève avec graphiques d'évolution du pouls et de la récupération.
+- Rapport de classe enregistrable en PDF, export CSV.
+- Sauvegarde et restauration depuis un fichier.
+- Test individuel pour une seule personne.
+- Interface en arabe et en français, mode clair et sombre.
+- Fonctionne entièrement hors ligne : aucune donnée n'est envoyée, tout reste sur votre appareil.
+
+Avertissement : cette application n'est pas un dispositif médical et ne diagnostique, ne traite, ne guérit ni ne prévient aucune maladie. Consultez toujours un professionnel de santé pour un avis médical.
+
+**لقطات الشاشة:** جاهزة في `store/screenshots/` (6 لقطات 1080×1920 بأسماء تلاميذ وهمية). أيقونة المتجر `store/icon-512.png` بصيغة PNG 32 بت مع قناة شفافية، وصورة الغلاف `store/feature-1024x500.png`.
 
 ## 7. نص سياسة الخصوصية (مختصر)
-التطبيق يعمل على جهاز المستخدم فقط دون اتصال بالإنترنت، ولا يرسل أي بيانات إلى أي خادم، ولا يستعمل أدوات تتبع أو إعلانات. البيانات التي يُدخلها المستخدم (أسماء، تواريخ ميلاد، قياسات) تُحفظ محلياً على الجهاز ويمكن حذفها من التطبيق. للتواصل: [بريدك].
+التطبيق يعمل على جهاز المستخدم فقط دون اتصال بالإنترنت، ولا يرسل أي بيانات إلى أي خادم، ولا يستعمل أدوات تتبع أو إعلانات. البيانات التي يُدخلها المستخدم (أسماء، تواريخ ميلاد، قياسات) تُحفظ محلياً على الجهاز ويمكن حذفها من التطبيق. للتواصل: algeriancitizen14@gmail.com.
 
 ## 8. تنبيهات قانونية مهمة
 - التطبيق يعالج بيانات **قاصرين** (أسماء وتواريخ ميلاد وقياسات). في الجزائر ينظم القانون 18-07 المتعلق بحماية الأشخاص الطبيعيين في معالجة المعطيات ذات الطابع الشخصي هذا النوع من المعالجة. تحقق من متطلباتك مع مختص قبل النشر أو الاستعمال في مؤسسة.

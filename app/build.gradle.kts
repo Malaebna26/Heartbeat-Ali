@@ -11,13 +11,13 @@ val keystoreProps = Properties().apply {
 }
 
 android {
-    // غيّر هذا المعرّف إلى معرّف فريد خاص بك قبل النشر (مثال: dz.tonnom.nabadatrabie)
+    // namespace هو اسم حزمة الشيفرة الداخلي، ويبقى كما هو. معرّف النشر على Play هو applicationId أدناه (لا يُغيَّر بعد أول رفع).
     namespace = "com.example.nabadatrabie"
 
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.nabadatrabie"
+        applicationId = "dz.alidz.nabadatrabie"
         minSdk = 26
         targetSdk = 36          // Google Play يشترط 36 للتحديثات والتطبيقات الجديدة منذ 31 أغسطس 2026
         versionCode = 1         // ارفع الرقم عند كل إصدار جديد (2، 3، ...)
