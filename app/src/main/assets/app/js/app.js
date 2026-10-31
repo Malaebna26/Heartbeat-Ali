@@ -4,6 +4,7 @@
 const $ = id => document.getElementById(id);
 const STORE_KEY = 'pupilsCheckList_v2';
 const LANG_KEY = 'nabadatLang';
+const THEME_KEY = 'nabadatTheme';
 const TIMER_TOTAL = 60000;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -16,7 +17,6 @@ function applyStaticI18n() {
   document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
   document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
-  $('langBtn').textContent = t('lang.toggle');
 }
 
 function setLanguage(l) {
@@ -28,6 +28,7 @@ function setLanguage(l) {
   renderAll();
   renderSolo();
   tRender();
+  markSettings();
 }
 
 function statusText(s) { return t('status.' + s); }
@@ -232,8 +233,8 @@ function chartBpm(h) {
   const n = h.length;
   let grid = '';
   [60, 100, 140, 180].forEach(v => {
-    grid += `<line x1="${CH.P}" x2="${CH.W - CH.P}" y1="${chartY(v)}" y2="${chartY(v)}" stroke="#eee"/>` +
-      `<text x="${CH.P - 6}" y="${chartY(v) + 4}" font-size="11" text-anchor="end" fill="#636e72">${v}</text>`;
+    grid += `<line x1="${CH.P}" x2="${CH.W - CH.P}" y1="${chartY(v)}" y2="${chartY(v)}" stroke="rgba(128,128,128,.3)"/>` +
+      `<text x="${CH.P - 6}" y="${chartY(v) + 4}" font-size="11" text-anchor="end" fill="#8b95a5">${v}</text>`;
   });
   const series = [['pre', '#636e72'], ['post', '#e84393'], ['rec', '#0984e3']];
   let lines = '';
@@ -242,7 +243,7 @@ function chartBpm(h) {
     if (pts.length > 1) lines += `<polyline fill="none" stroke="${color}" stroke-width="2.5" points="${pts.map(p => p.join(',')).join(' ')}"/>`;
     pts.forEach(p => { lines += `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="${color}"/>`; });
   });
-  const labels = h.map((s, k) => `<text x="${chartX(k, n)}" y="${CH.H - 8}" font-size="11" text-anchor="middle" fill="#636e72">${k + 1}</text>`).join('');
+  const labels = h.map((s, k) => `<text x="${chartX(k, n)}" y="${CH.H - 8}" font-size="11" text-anchor="middle" fill="#8b95a5">${k + 1}</text>`).join('');
   return `<svg viewBox="0 0 ${CH.W} ${CH.H}" width="100%" role="img">${grid}${lines}${labels}</svg>`;
 }
 
@@ -261,12 +262,12 @@ function chartDrop(h) {
     const x = chartX(k, n) - barW / 2;
     const hgt = Math.max(0, d * scale);
     bars += `<rect x="${x}" y="${base - hgt}" width="${barW}" height="${hgt}" rx="4" fill="${color}"/>` +
-      `<text x="${chartX(k, n)}" y="${base - hgt - 4}" font-size="11" text-anchor="middle" fill="#2d3436">${d}</text>`;
+      `<text x="${chartX(k, n)}" y="${base - hgt - 4}" font-size="11" text-anchor="middle" fill="currentColor">${d}</text>`;
   });
   const th12 = base - 12 * scale;
   const thLine = `<line x1="${CH.P}" x2="${CH.W - CH.P}" y1="${th12}" y2="${th12}" stroke="#d63031" stroke-dasharray="5 4"/>` +
     `<text x="${CH.W - CH.P}" y="${th12 - 4}" font-size="11" text-anchor="end" fill="#d63031">${esc(t('hist.threshold'))}</text>`;
-  const labels = h.map((s, k) => `<text x="${chartX(k, n)}" y="${CH.H - 8}" font-size="11" text-anchor="middle" fill="#636e72">${k + 1}</text>`).join('');
+  const labels = h.map((s, k) => `<text x="${chartX(k, n)}" y="${CH.H - 8}" font-size="11" text-anchor="middle" fill="#8b95a5">${k + 1}</text>`).join('');
   return `<svg viewBox="0 0 ${CH.W} ${CH.H}" width="100%" role="img">${thLine}${bars}${labels}</svg>`;
 }
 
@@ -363,6 +364,7 @@ $('restoreFile').addEventListener('change', async e => {
   } catch (err) {
     flash(err.message === 'too-many' ? t('msg.badBackupBig') : t('msg.badBackup'), 'err');
   }
+  closeSettings();
 });
 
 // ===== المسح =====
@@ -384,6 +386,7 @@ $('removeList').addEventListener('click', () => {
 
 $('wipe').addEventListener('click', () => {
   if (!confirm(t('confirm.wipe'))) return;
+  closeSettings();
   pupils = [];
   currentClass = 'all';
   renderAll();
@@ -446,6 +449,7 @@ $('file').addEventListener('change', async e => {
 
 $('parsePaste').addEventListener('click', () => {
   const text = $('pasteBox').value;
+  closeSettings();
   if (!text.trim()) { flash(t('msg.pasteEmpty'), 'err'); return; }
   try {
     const sheets = text.includes('\t')
@@ -572,8 +576,33 @@ $('sClear').addEventListener('click', () => {
   renderSolo();
 });
 
-// ===== اللغة =====
-$('langBtn').addEventListener('click', () => setLanguage(LANG === 'fr' ? 'ar' : 'fr'));
+// ===== الإعدادات: اللغة والمظهر =====
+function currentTheme() { return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'; }
+
+function markSettings() {
+  document.querySelectorAll('#langSeg button').forEach(b => b.classList.toggle('active', b.dataset.lang === LANG));
+  document.querySelectorAll('#themeSeg button').forEach(b => b.classList.toggle('active', b.dataset.theme === currentTheme()));
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light';
+  try { localStorage.setItem(THEME_KEY, currentTheme()); } catch (e) {}
+  markSettings();
+}
+
+function closeSettings() {
+  const dlg = $('settingsDialog');
+  if (dlg.close) dlg.close(); else dlg.removeAttribute('open');
+}
+
+$('settingsBtn').addEventListener('click', () => {
+  markSettings();
+  const dlg = $('settingsDialog');
+  if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+});
+$('settingsClose').addEventListener('click', closeSettings);
+document.querySelectorAll('#langSeg button').forEach(b => b.addEventListener('click', () => setLanguage(b.dataset.lang)));
+document.querySelectorAll('#themeSeg button').forEach(b => b.addEventListener('click', () => applyTheme(b.dataset.theme)));
 
 window.addEventListener('error', e => flash(t('msg.error', { e: e.message }), 'err'));
 
@@ -584,10 +613,18 @@ window.addEventListener('error', e => flash(t('msg.error', { e: e.message }), 'e
   setLang(saved);
   document.documentElement.lang = saved;
   document.documentElement.dir = saved === 'fr' ? 'ltr' : 'rtl';
+  let theme = 'light';
+  try {
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    if (savedTheme === 'dark' || savedTheme === 'light') theme = savedTheme;
+    else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
+  } catch (e) {}
+  document.documentElement.dataset.theme = theme;
   $('jsWarn').style.display = 'none';
   applyStaticI18n();
   load();
   renderAll();
   renderSolo();
   tRender('');
+  markSettings();
 })();

@@ -4,7 +4,11 @@
 const I18N = {
   ar: {
     'app.sub': 'اختر الوضع: فحص قائمة تلاميذ، أو فحص فردي لشخص واحد',
-    'lang.toggle': 'Français',
+    'settings.title': '⚙️ الإعدادات',
+    'settings.language': 'اللغة',
+    'settings.theme': 'المظهر',
+    'settings.light': '☀️ نهاري',
+    'settings.dark': '🌙 ليلي',
     'tab.teachers': '👩‍🏫 للأساتذة (قائمة تلاميذ)',
     'tab.solo': '🙋 فحص فردي',
 
@@ -130,7 +134,11 @@ const I18N = {
 
   fr: {
     'app.sub': 'Choisissez le mode : liste d’élèves ou test individuel',
-    'lang.toggle': 'عربي',
+    'settings.title': '⚙️ Paramètres',
+    'settings.language': 'Langue',
+    'settings.theme': 'Thème',
+    'settings.light': '☀️ Clair',
+    'settings.dark': '🌙 Sombre',
     'tab.teachers': '👩‍🏫 Enseignants (liste d’élèves)',
     'tab.solo': '🙋 Test individuel',
 

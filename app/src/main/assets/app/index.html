@@ -8,9 +8,14 @@
   * { box-sizing:border-box; margin:0; padding:0; }
   body { font-family:'Cairo','Noto Sans Arabic','Droid Arabic Naskh',sans-serif; background:linear-gradient(135deg,#fd79a8 0%,#e84393 30%,#0984e3 100%); min-height:100vh; padding:24px 16px; color:#2d3436; }
   .wrap { max-width:1250px; margin:0 auto; }
-  .topbar { display:flex; justify-content:flex-start; margin-bottom:6px; }
-  .lang-btn { background:rgba(255,255,255,.25); color:#fff; border:2px solid rgba(255,255,255,.6); border-radius:20px; padding:6px 14px; font-family:inherit; font-weight:700; cursor:pointer; }
-  .lang-btn:hover { background:rgba(255,255,255,.4); }
+  .topbar { display:flex; justify-content:flex-end; direction:ltr; margin-bottom:6px; }
+  .gear-btn { width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.25); color:#fff; border:2px solid rgba(255,255,255,.6); font-size:1.3rem; line-height:1; cursor:pointer; }
+  .gear-btn:hover { background:rgba(255,255,255,.4); }
+  .muted { color:#636e72; }
+  .seg { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
+  .seg button { flex:1; min-width:120px; padding:10px 14px; border:2px solid #dfe6e9; border-radius:12px; background:#fff; color:#2d3436; font-family:inherit; font-weight:700; font-size:1rem; cursor:pointer; }
+  .seg button.active { background:linear-gradient(135deg,#e84393,#0984e3); border-color:transparent; color:#fff; }
+  #settingsDialog { overflow:auto; }
   header { text-align:center; color:#fff; margin-bottom:18px; }
   header h1 { font-size:2rem; font-weight:800; text-shadow:0 2px 10px rgba(0,0,0,.2); display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center; }
   header p { color:rgba(255,255,255,.92); margin-top:6px; font-weight:600; }
@@ -70,7 +75,7 @@
   select { padding:6px; border:2px solid #dfe6e9; border-radius:10px; font-family:inherit; font-size:.88rem; background:#fff; }
   input[type=checkbox] { width:18px; height:18px; accent-color:#d63031; cursor:pointer; }
   input:focus, select:focus { outline:none; border-color:#e84393; box-shadow:0 0 0 3px rgba(232,67,147,.15); }
-  .tab:focus-visible, .btn:focus-visible, .mini:focus-visible, .lang-btn:focus-visible, select:focus-visible, input:focus-visible { outline:3px solid #fdcb6e; outline-offset:2px; }
+  .tab:focus-visible, .btn:focus-visible, .mini:focus-visible, .gear-btn:focus-visible, .seg button:focus-visible, select:focus-visible, input:focus-visible { outline:3px solid #fdcb6e; outline-offset:2px; }
   .badge { display:inline-block; padding:4px 10px; border-radius:20px; font-weight:700; font-size:.82rem; color:#fff; white-space:nowrap; }
   .badge.ok { background:#00b894; }
   .badge.follow { background:#f0932b; }
@@ -119,6 +124,31 @@
   .hist-scroll { overflow:auto; max-height:30vh; border:1px solid #eee; border-radius:12px; }
   .hist-table { min-width:0; font-size:.9rem; }
   .hist-none { color:#636e72; line-height:1.8; padding:16px 0; }
+  /* الوضع الليلي: على الشاشة فقط، ولا يؤثر على الطباعة */
+  @media screen {
+    html[data-theme="dark"] { color-scheme:dark; }
+    html[data-theme="dark"] body { background:linear-gradient(135deg,#2b1b3a 0%,#1b2038 50%,#0d2a4a 100%); color:#e8eaf0; }
+    html[data-theme="dark"] .card, html[data-theme="dark"] dialog { background:#1f2433; color:#e8eaf0; }
+    html[data-theme="dark"] .card h3, html[data-theme="dark"] .muted, html[data-theme="dark"] .legend, html[data-theme="dark"] .hist-none, html[data-theme="dark"] .flags, html[data-theme="dark"] .upload small, html[data-theme="dark"] td.g, html[data-theme="dark"] td.empty { color:#a3adbf; }
+    html[data-theme="dark"] .chart-box h3 { color:#e8eaf0; }
+    html[data-theme="dark"] input, html[data-theme="dark"] select, html[data-theme="dark"] textarea { background:#2a3042; color:#e8eaf0; border-color:#3a4258; }
+    html[data-theme="dark"] input::placeholder, html[data-theme="dark"] textarea::placeholder { color:#7f8aa0; }
+    html[data-theme="dark"] th { background:#272d3f; color:#a3adbf; }
+    html[data-theme="dark"] th, html[data-theme="dark"] td { border-bottom-color:#2f3650; }
+    html[data-theme="dark"] .table-wrap, html[data-theme="dark"] .hist-scroll { border-color:#2f3650; }
+    html[data-theme="dark"] tr.extra td { background:#2a2236; }
+    html[data-theme="dark"] .rules { background:#262c3d; }
+    html[data-theme="dark"] .note { background:#4a4222; color:#f3e7b0; }
+    html[data-theme="dark"] .msg.ok { background:#0f3d33; color:#7ff0c8; }
+    html[data-theme="dark"] .msg.err { background:#4a1f22; color:#ff9b9b; }
+    html[data-theme="dark"] .msg.info { background:#1c3550; color:#9bc9ff; }
+    html[data-theme="dark"] .mini { background:#2a3042; border-color:#3a4258; color:#e8eaf0; }
+    html[data-theme="dark"] .tab, html[data-theme="dark"] .seg button { background:#1f2433; border-color:#3a4258; color:#c5b8ff; }
+    html[data-theme="dark"] .tab.active, html[data-theme="dark"] .seg button.active { background:linear-gradient(135deg,#e84393,#0984e3); color:#fff; }
+    html[data-theme="dark"] .upload label.drop { background:#2a2236; }
+    html[data-theme="dark"] .badge.incomplete { background:#4a5163; color:#e8eaf0; }
+    html[data-theme="dark"] .fb-link { color:#6ea8ff; }
+  }
   /* التقرير المطبوع: مخفي على الشاشة */
   #printReport { display:none; }
   @media (max-width:850px) { .stats { grid-template-columns:repeat(2,1fr); } }
@@ -148,7 +178,7 @@
 <div class="wrap">
   <div class="msg err show" id="jsWarn">⚠️ المتصفح لم يشغّل الصفحة. افتحها بمتصفح Chrome محدّث، أو حدّث التطبيق الحالي.</div>
 
-  <div class="topbar"><button class="lang-btn" id="langBtn" type="button"></button></div>
+  <div class="topbar"><button class="gear-btn" id="settingsBtn" type="button" data-i18n-title="settings.title" aria-label="Settings">⚙️</button></div>
 
   <header>
     <h1>🫀 نبضات ربيع</h1>
@@ -238,7 +268,7 @@
 
   <section class="card" id="viewSolo" hidden>
     <h2 data-i18n="solo.title"></h2>
-    <p style="color:#636e72; margin-bottom:14px" data-i18n="solo.intro"></p>
+    <p class="muted" style="margin-bottom:14px" data-i18n="solo.intro"></p>
     <div class="solo-grid">
       <div><label for="sName" data-i18n="solo.name"></label><input id="sName"></div>
       <div><label for="sGender" data-i18n="solo.gender"></label><select id="sGender"><option value="" data-i18n="gender.none"></option><option value="m" data-i18n="gender.m"></option><option value="f" data-i18n="gender.f"></option></select></div>
@@ -251,28 +281,6 @@
     </div>
     <div class="solo-result" id="soloResult"></div>
     <div class="preview-actions"><button class="btn gray" id="sClear" type="button" data-i18n="btn.clearFields"></button></div>
-  </section>
-
-  <section class="card">
-    <details class="advanced">
-      <summary data-i18n="adv.title"></summary>
-      <div class="adv-body">
-        <details class="sub">
-          <summary data-i18n="adv.pasteSummary"></summary>
-          <p style="font-size:.88rem; color:#636e72; margin:8px 0" data-i18n="adv.pasteHelp"></p>
-          <textarea id="pasteBox" rows="5"></textarea>
-          <div class="preview-actions"><button class="btn" id="parsePaste" type="button" data-i18n="btn.parsePaste"></button></div>
-        </details>
-
-        <h3 data-i18n="adv.restoreTitle"></h3>
-        <p style="font-size:.88rem; color:#636e72; line-height:1.7" data-i18n="adv.restoreHelp"></p>
-        <p style="margin-top:8px"><input type="file" id="restoreFile" accept=".json,application/json"></p>
-
-        <div class="preview-actions" style="margin-top:16px">
-          <button class="btn red" id="wipe" type="button" data-i18n="adv.wipe"></button>
-        </div>
-      </div>
-    </details>
   </section>
 
   <section class="card info-card">
@@ -296,6 +304,41 @@
     </a>
   </footer>
 </div>
+
+<dialog id="settingsDialog">
+  <h2 data-i18n="settings.title"></h2>
+
+  <h3 data-i18n="settings.language"></h3>
+  <div class="seg" id="langSeg">
+    <button type="button" data-lang="ar">العربية</button>
+    <button type="button" data-lang="fr">Français</button>
+  </div>
+
+  <h3 data-i18n="settings.theme"></h3>
+  <div class="seg" id="themeSeg">
+    <button type="button" data-theme="light" data-i18n="settings.light"></button>
+    <button type="button" data-theme="dark" data-i18n="settings.dark"></button>
+  </div>
+
+  <h3 style="margin-top:18px" data-i18n="adv.title"></h3>
+  <div class="adv-body">
+        <details class="sub">
+          <summary data-i18n="adv.pasteSummary"></summary>
+          <p class="muted" style="font-size:.88rem; margin:8px 0" data-i18n="adv.pasteHelp"></p>
+          <textarea id="pasteBox" rows="5"></textarea>
+          <div class="preview-actions"><button class="btn" id="parsePaste" type="button" data-i18n="btn.parsePaste"></button></div>
+        </details>
+
+        <h3 data-i18n="adv.restoreTitle"></h3>
+        <p class="muted" style="font-size:.88rem; line-height:1.7" data-i18n="adv.restoreHelp"></p>
+        <p style="margin-top:8px"><input type="file" id="restoreFile" accept=".json,application/json"></p>
+
+        <div class="preview-actions" style="margin-top:16px">
+          <button class="btn red" id="wipe" type="button" data-i18n="adv.wipe"></button>
+        </div>
+  </div>
+  <div class="preview-actions"><button class="btn gray" id="settingsClose" type="button" data-i18n="hist.close"></button></div>
+</dialog>
 
 <dialog id="histDialog">
   <h2 id="histTitle"></h2>
