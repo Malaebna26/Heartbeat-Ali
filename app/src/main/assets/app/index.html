@@ -57,6 +57,25 @@
   .s-ok { background:linear-gradient(135deg,#00b894,#55efc4); }
   .s-follow { background:linear-gradient(135deg,#f9ca24,#f0932b); }
   .s-refer { background:linear-gradient(135deg,#d63031,#ff7675); }
+  [hidden] { display:none !important; }
+  .topbar { justify-content:space-between; }
+  .searchbar { display:none; gap:8px; margin-bottom:12px; }
+  .searchbar.open { display:flex; }
+  .searchbar input { flex:1; min-width:0; padding:12px 14px; border:2px solid #fff; border-radius:14px; font-family:inherit; font-size:1rem; box-shadow:0 6px 18px rgba(0,0,0,.15); }
+  .class-filter { width:100%; padding:10px; font-size:1rem; }
+  .tools { display:flex; gap:8px; width:100%; }
+  .ibtn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; min-height:58px; padding:6px 4px; border:none; border-radius:14px; font-family:inherit; font-weight:700; font-size:.74rem; line-height:1.2; color:#fff; background:linear-gradient(135deg,#e84393,#0984e3); cursor:pointer; text-align:center; }
+  .ibtn .ico, .nav-btn .ico { font-size:1.45rem; line-height:1; position:relative; }
+  .ibtn.gray { background:#636e72; }
+  .ibtn.red { background:#d63031; }
+  .ibtn:active, .nav-btn:active { transform:scale(.96); }
+  .bottom-nav { position:fixed; bottom:0; left:0; right:0; max-width:560px; margin:0 auto; z-index:30; display:flex; gap:6px; padding:8px 10px; background:rgba(255,255,255,.97); box-shadow:0 -6px 22px rgba(0,0,0,.2); border-radius:20px 20px 0 0; }
+  .bottom-nav.away { display:none; }
+  .nav-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 2px; border:none; border-radius:12px; background:none; color:#6c5ce7; font-family:inherit; font-weight:700; font-size:.72rem; cursor:pointer; }
+  .nav-btn:focus-visible, .ibtn:focus-visible { outline:3px solid #fdcb6e; outline-offset:2px; }
+  .nav-btn.locked .ico::after, .ibtn.locked .ico::after { content:'🔒'; position:absolute; top:-6px; inset-inline-end:-12px; font-size:.65rem; }
+  .wrap { padding-bottom:88px; }
+  .rules { margin-top:8px; }
   .toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
   .toolbar input[type=search] { flex:1; min-width:200px; padding:11px 14px; border:2px solid #dfe6e9; border-radius:12px; font-family:inherit; font-size:1rem; }
   .btn { padding:11px 16px; border:none; border-radius:12px; font-family:inherit; font-weight:700; font-size:.95rem; cursor:pointer; color:#fff; background:linear-gradient(135deg,#e84393,#0984e3); transition:transform .2s; }
@@ -157,11 +176,14 @@
     html[data-theme="dark"] .tab.active, html[data-theme="dark"] .seg button.active { background:linear-gradient(135deg,#e84393,#0984e3); color:#fff; }
     html[data-theme="dark"] .upload label.drop { background:#2a2236; }
     html[data-theme="dark"] .badge.incomplete { background:#4a5163; color:#e8eaf0; }
+    html[data-theme="dark"] .bottom-nav { background:rgba(31,36,51,.97); }
+    html[data-theme="dark"] .nav-btn { color:#c5b8ff; }
+    html[data-theme="dark"] .searchbar input { border-color:#3a4258; }
     html[data-theme="dark"] .fb-link { color:#6ea8ff; }
   }
   /* التقرير المطبوع: مخفي على الشاشة */
   #printReport { display:none; }
-  @media (max-width:850px) { .stats { grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:850px) { .stats { grid-template-columns:repeat(5,1fr); gap:6px; } .stat { padding:8px 2px; font-size:.7rem; line-height:1.25; } .stat b { font-size:1.35rem; } }
   @media (max-width:560px) {
     body { padding:16px 12px; }
     .tabs { flex-direction:column; }
@@ -188,7 +210,14 @@
 <div class="wrap">
   <div class="msg err show" id="jsWarn">⚠️ المتصفح لم يشغّل الصفحة. افتحها بمتصفح Chrome محدّث، أو حدّث التطبيق الحالي.</div>
 
-  <div class="topbar"><button class="gear-btn" id="settingsBtn" type="button" data-i18n-title="settings.title" aria-label="Settings">⚙️</button></div>
+  <div class="topbar">
+    <button class="gear-btn" id="searchBtn" type="button" data-i18n-title="search.btn" aria-label="Search" aria-expanded="false">🔍</button>
+    <button class="gear-btn" id="settingsBtn" type="button" data-i18n-title="settings.title" aria-label="Settings">⚙️</button>
+  </div>
+  <div class="searchbar" id="searchBar">
+    <input type="search" id="search" data-i18n-ph="search.ph" autocomplete="off">
+    <button class="btn gray" id="searchClose" type="button" data-i18n-title="search.close" aria-label="Close">✖</button>
+  </div>
 
   <header>
     <h1>🫀 نبضات ربيع</h1>
@@ -239,14 +268,12 @@
       </div>
 
       <div class="toolbar">
-        <input type="search" id="search" data-i18n-ph="search.ph">
-        <select id="classFilter"></select>
-        <button class="btn" id="addExtra" type="button" data-i18n="btn.addExtra"></button>
-        <button class="btn" id="report" type="button" data-i18n="btn.report"></button>
-        <button class="btn green" id="backup" type="button" data-i18n="btn.backup"></button>
-        <button class="btn green" id="csv" type="button" data-i18n="btn.csv"></button>
-        <button class="btn gray" id="clear" type="button" data-i18n="btn.clear"></button>
-        <button class="btn red" id="removeList" type="button" data-i18n="btn.removeList"></button>
+        <select id="classFilter" class="class-filter"></select>
+        <div class="tools">
+          <button class="ibtn" id="addExtra" type="button" data-i18n-title="btn.addExtra"><span class="ico">➕</span><span class="lbl" data-i18n="tool.add"></span></button>
+          <button class="ibtn gray" id="clear" type="button" data-i18n-title="btn.clear"><span class="ico">🧹</span><span class="lbl" data-i18n="tool.clear"></span></button>
+          <button class="ibtn red" id="removeList" type="button" data-i18n-title="btn.removeList"><span class="ico">🗑️</span><span class="lbl" data-i18n="tool.remove"></span></button>
+        </div>
       </div>
 
       <div class="table-wrap">
@@ -271,8 +298,6 @@
         </table>
       </div>
 
-      <div class="rules" data-i18n-html="rules.html"></div>
-      <div class="note" data-i18n-html="note.html"></div>
     </section>
   </div>
 
@@ -293,19 +318,12 @@
     <div class="preview-actions"><button class="btn gray" id="sClear" type="button" data-i18n="btn.clearFields"></button></div>
   </section>
 
-  <section class="card info-card">
-    <h2 data-i18n="info.title"></h2>
-    <div class="info-links">
-      <a href="terms.html" data-i18n="info.terms"></a>
-      <a href="privacy.html" data-i18n="info.privacy"></a>
-    </div>
-    <div>
-      <a class="fb-link" href="https://www.facebook.com/share/19etGLcxMB/">
-        <svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="5" fill="#1877F2"/><path fill="#fff" d="M16.7 15.5l.5-3.4h-3.3V9.9c0-.9.5-1.8 1.9-1.8h1.5V5.2s-1.4-.2-2.7-.2c-2.7 0-4.5 1.6-4.5 4.6v2.5H7.1v3.4h3.1V24h3.8v-8.5z"/></svg>
-        <span data-i18n="info.fb"></span>
-      </a>
-    </div>
-  </section>
+
+  <nav class="bottom-nav" id="bottomNav" aria-label="Tools">
+    <button class="nav-btn" id="report" type="button" data-i18n-title="btn.report"><span class="ico">🖨️</span><span class="lbl" data-i18n="nav.report"></span></button>
+    <button class="nav-btn" id="csv" type="button" data-i18n-title="btn.csv"><span class="ico">📊</span><span class="lbl" data-i18n="nav.csv"></span></button>
+    <button class="nav-btn" id="backup" type="button" data-i18n-title="btn.backup"><span class="ico">💾</span><span class="lbl" data-i18n="nav.backup"></span></button>
+  </nav>
 
   <footer class="dev-credit" aria-label="Ali.dz">
     <a href="https://www.facebook.com/share/19etGLcxMB/">
@@ -333,7 +351,7 @@
   <div id="proBox" class="pro-box" hidden>
     <h3 data-i18n="pro.title"></h3>
     <p class="muted" style="font-size:.88rem; line-height:1.7" data-i18n="pro.help"></p>
-    <div id="proActive" class="msg ok show" hidden data-i18n="pro.active"></div>
+    <div id="proActive" class="msg ok show" style="display:none" data-i18n="pro.active"></div>
     <div id="proForm">
       <div class="field">
         <label for="proDeviceId" data-i18n="pro.deviceId"></label>
@@ -350,6 +368,26 @@
       <p class="muted" style="font-size:.85rem; line-height:1.7; margin-top:10px" data-i18n="pro.contact"></p>
     </div>
   </div>
+
+  <details class="sub">
+    <summary data-i18n="rules.title"></summary>
+    <div class="rules" data-i18n-html="rules.html"></div>
+    <div class="note" data-i18n-html="note.html"></div>
+  </details>
+
+  <details class="sub">
+    <summary data-i18n="info.title"></summary>
+    <div class="info-links" style="margin-top:10px">
+      <a href="terms.html" data-i18n="info.terms"></a>
+      <a href="privacy.html" data-i18n="info.privacy"></a>
+    </div>
+    <div style="text-align:center">
+      <a class="fb-link" href="https://www.facebook.com/share/19etGLcxMB/">
+        <svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="5" fill="#1877F2"/><path fill="#fff" d="M16.7 15.5l.5-3.4h-3.3V9.9c0-.9.5-1.8 1.9-1.8h1.5V5.2s-1.4-.2-2.7-.2c-2.7 0-4.5 1.6-4.5 4.6v2.5H7.1v3.4h3.1V24h3.8v-8.5z"/></svg>
+        <span data-i18n="info.fb"></span>
+      </a>
+    </div>
+  </details>
 
   <h3 style="margin-top:18px" data-i18n="adv.title"></h3>
   <div class="adv-body">

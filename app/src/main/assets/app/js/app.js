@@ -204,6 +204,24 @@ $('rows').addEventListener('keydown', e => {
 
 $('search').addEventListener('input', applySearch);
 
+// زر البحث في الأعلى: يفتح شريط البحث، والإغلاق يمسح البحث حتى لا يبقى الجدول مصفّى دون أن يلاحظ المستخدم
+function setSearchOpen(open) {
+  $('searchBar').classList.toggle('open', open);
+  $('searchBtn').setAttribute('aria-expanded', String(open));
+  if (open) $('search').focus();
+  else { $('search').value = ''; applySearch(); }
+}
+$('searchBtn').addEventListener('click', () => setSearchOpen(!$('searchBar').classList.contains('open')));
+$('searchClose').addEventListener('click', () => setSearchOpen(false));
+
+// عند ظهور لوحة المفاتيح تصغر نافذة الصفحة، فنخفي الشريط السفلي حتى لا يغطي الحقول
+// (نعتمد على تغيّر الارتفاع لا على التركيز، لأن الحقل قد يبقى «مركَّزاً» بعد إغلاق لوحة المفاتيح)
+let maxViewportH = window.innerHeight;
+window.addEventListener('resize', () => {
+  if (window.innerHeight > maxViewportH) maxViewportH = window.innerHeight;
+  $('bottomNav').classList.toggle('away', window.innerHeight < maxViewportH - 160);
+});
+
 $('addExtra').addEventListener('click', () => {
   pupils.push(newPupil('', '', '', true, currentClass === 'all' ? '' : currentClass));
   renderAll();
@@ -556,6 +574,9 @@ document.addEventListener('visibilitychange', () => {
 function showView(v) {
   $('viewTeachers').hidden = v !== 'teachers';
   $('viewSolo').hidden = v !== 'solo';
+  $('bottomNav').hidden = v !== 'teachers';
+  $('searchBtn').hidden = v !== 'teachers';
+  if (v !== 'teachers') setSearchOpen(false);
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.view === v));
 }
 document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
