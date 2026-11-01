@@ -1,2 +1,5 @@
-# التطبيق لا يستعمل مكتبات تعتمد على الانعكاس؛ القواعد الافتراضية كافية.
-# إن أضفت جسور JavaScript (addJavascriptInterface) فأضف قواعد الحماية هنا.
+# التطبيق لا يستعمل مكتبات تعتمد على الانعكاس.
+# جسور JavaScript: يجب ألا تُعاد تسمية دوالها ولا تُحذف، وإلا تتعطل الطباعة والتفعيل في نسخة release.
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}

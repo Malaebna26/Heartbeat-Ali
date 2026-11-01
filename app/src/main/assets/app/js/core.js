@@ -79,6 +79,13 @@ function cleanMeasure(v) {
   return Number.isFinite(n) && n >= 20 && n <= 300 ? String(n) : '';
 }
 
+// خلية CSV آمنة: تمنع تنفيذ الصيغ في Excel (اسم يبدأ بـ = أو + أو - أو @) وتُهرِّب علامات الاقتباس
+function csvCell(v) {
+  let s = String(v == null ? '' : v);
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+
 function cleanText(v, max) { return typeof v === 'string' ? v.slice(0, max) : ''; }
 
 function sanitizeSession(h) {
@@ -134,6 +141,6 @@ function parseBackup(text) {
 if (typeof module !== 'undefined') {
   module.exports = {
     STORE_VERSION, BACKUP_APP, restRange, num, ageFromDob, classify, newPupil,
-    saveSession, sanitizePupil, buildBackup, parseBackup, cleanMeasure
+    saveSession, sanitizePupil, buildBackup, parseBackup, cleanMeasure, csvCell
   };
 }

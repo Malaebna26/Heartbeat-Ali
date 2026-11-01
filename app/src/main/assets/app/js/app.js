@@ -323,9 +323,9 @@ $('csv').addEventListener('click', () => {
       r.status ? statusText(r.status) : '',
       r.flags.map(flagText).join(' | '),
       p.history.length
-    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+    ].map(csvCell).join(',');
   });
-  const header = t('csv.h').map(h => `"${h}"`).join(',');
+  const header = t('csv.h').map(csvCell).join(',');
   const name = currentClass === 'all' ? t('csv.name.all') : t('csv.name.class', { s: currentClass });
   download(name + '.csv', '﻿' + [header, ...lines].join('\n'), 'text/csv;charset=utf-8');
 });

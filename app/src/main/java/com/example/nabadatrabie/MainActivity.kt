@@ -86,6 +86,8 @@ class MainActivity : ComponentActivity() {
             // الروابط الداخلية تُفتح داخل التطبيق، والخارجية (مثل فيسبوك) تُفتح في متصفح الجهاز
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 if (request.url.host == APP_HOST) return false
+                // لا يُفتح خارج التطبيق إلا روابط http/https (يمنع intent: وfile: وغيرها)
+                if (request.url.scheme != "https" && request.url.scheme != "http") return true
                 return try {
                     startActivity(Intent(Intent.ACTION_VIEW, request.url))
                     true

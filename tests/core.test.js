@@ -169,3 +169,14 @@ test('newPupil يضبط الحقول الافتراضية والسجل الفا�
   assert.equal(p.protocol, 'cooldown');
   assert.equal(p.g, 'f');
 });
+
+test('csvCell يمنع حقن الصيغ ويهرّب علامات الاقتباس', () => {
+  const { csvCell } = require('../app/src/main/assets/app/js/core.js');
+  assert.equal(csvCell('=HYPERLINK("x")'), '"\'=HYPERLINK(""x"")"');
+  assert.equal(csvCell('+1'), '"\'+1"');
+  assert.equal(csvCell('-2'), '"\'-2"');
+  assert.equal(csvCell('@SUM(A1)'), '"\'@SUM(A1)"');
+  assert.equal(csvCell('علي "أ"'), '"علي ""أ"""');
+  assert.equal(csvCell(null), '""');
+  assert.equal(csvCell(72), '"72"');
+});

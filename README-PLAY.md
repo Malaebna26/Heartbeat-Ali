@@ -17,8 +17,8 @@
 ## 2ب. البناء عبر GitHub (بدون Android Studio)
 1. ارفع المجلد إلى مستودع GitHub خاص (private). ملف `.github/workflows/android.yml` يبني المشروع تلقائياً عند كل رفع.
 2. من تبويب **Actions** تجد نتيجة البناء، ومن **Artifacts** تنزّل:
-   - `app/build/outputs/apk/debug/*.apk` للتجربة على الهاتف.
-   - `app/build/outputs/bundle/release/*.aab` للرفع على Play Console.
+   - `app/build/outputs/apk/play/debug/*.apk` للتجربة على الهاتف.
+   - `app/build/outputs/bundle/playRelease/*.aab` للرفع على Play Console.
 3. يتحقق الملف تلقائياً من: سلامة JavaScript للصفحة، وعدم وجود روابط خارجية، وعدم وجود صلاحية INTERNET.
 4. لتوقيع AAB للنشر، أضف في **Settings > Secrets and variables > Actions** الأسرار التالية (لا ترسل المفتاح في أي محادثة):
    - `KEYSTORE_BASE64`: محتوى ملف `.jks` بصيغة base64 (`base64 -w0 release-key.jks`)
@@ -34,7 +34,7 @@ keytool -genkeypair -v -keystore release-key.jks -alias nabadat-release -keyalg 
 ## 4. بناء ملف AAB للنشر
 1. افتح المجلد في **Android Studio** (الإصدار الحديث). سيُنشئ Gradle Wrapper تلقائياً.
 2. Build > Generate Signed App Bundle / APK > Android App Bundle > اختر المفتاح > release.
-3. الناتج: `app/build/outputs/bundle/release/app-release.aab`.
+3. الناتج: `app/build/outputs/bundle/playRelease/app-play-release.aab`.
 
 قبل رفع الملف تحقق من:
 - **Merged Manifest** يجب ألا يحتوي `android.permission.INTERNET`.
@@ -107,3 +107,9 @@ Avertissement : cette application n'est pas un dispositif médical et ne diagnos
 - التطبيق يعالج بيانات **قاصرين** (أسماء وتواريخ ميلاد وقياسات). في الجزائر ينظم القانون 18-07 المتعلق بحماية الأشخاص الطبيعيين في معالجة المعطيات ذات الطابع الشخصي هذا النوع من المعالجة. تحقق من متطلباتك مع مختص قبل النشر أو الاستعمال في مؤسسة.
 - التطبيق لا يحفظ بيانات على خوادم، لكن المعلم مسؤول عن الجهاز وعن ملف CSV الذي يصدّره.
 - العتبات المستعملة (نبض الراحة والتعافي) تقديرية، ويجب أن يعتمدها طبيب مختص قبل أي استعمال رسمي.
+
+## ملاحظة: النسختان (play / direct) والتفعيل
+
+- **play**: للنشر على Google Play. كل الميزات مفتوحة، ولا توجد شاشة تفعيل. الأمر: `gradle :app:bundlePlayRelease`.
+- **direct**: للتوزيع المباشر خارج Play، وتصدير CSV وPDF والنسخ الاحتياطي مقفلة حتى إدخال كود تفعيل. الأمر: `gradle :app:assembleDirectRelease`.
+- توليد كود: من GitHub ← Actions ← «توليد كود تفعيل» (يحتاج السر `LICENSE_PRIVATE_KEY`). المفتاح الخاص لا يُرفع إلى المستودع أبداً.
