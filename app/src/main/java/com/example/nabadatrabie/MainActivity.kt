@@ -6,6 +6,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.print.PrintAttributes
 import android.print.PrintManager
 import android.webkit.JavascriptInterface
@@ -64,6 +65,8 @@ class MainActivity : ComponentActivity() {
 
         // جسر الطباعة: يسمح للصفحة بفتح نافذة طباعة النظام (وفيها خيار حفظ PDF)
         webView.addJavascriptInterface(PrintBridge(), "AndroidPrint")
+        // جسر الترخيص: رقم الجهاز ووضع القفل فقط، ولا شيء غيرهما
+        webView.addJavascriptInterface(DeviceBridge(), "AndroidDevice")
 
         webView.settings.apply {
             javaScriptEnabled = true          // الصفحة تعتمد على JavaScript
@@ -156,6 +159,16 @@ class MainActivity : ComponentActivity() {
                 printManager.print("تقرير نبضات ربيع", adapter, PrintAttributes.Builder().build())
             }
         }
+    }
+
+    inner class DeviceBridge {
+        @JavascriptInterface
+        fun lockMode(): Boolean = BuildConfig.LOCK_MODE
+
+        /** معرّف ثابت لهذا الجهاز وهذا التوقيع؛ يبقى كما هو بعد إعادة تثبيت التطبيق. */
+        @JavascriptInterface
+        fun deviceId(): String =
+            Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID) ?: ""
     }
 
     companion object {

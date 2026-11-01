@@ -313,6 +313,7 @@ function download(name, content, type) {
 }
 
 $('csv').addEventListener('click', () => {
+  if (!requirePro()) return;
   const lines = visiblePupils().map(p => {
     const r = classify(p);
     return [
@@ -330,6 +331,7 @@ $('csv').addEventListener('click', () => {
 });
 
 $('report').addEventListener('click', () => {
+  if (!requirePro()) return;
   const list = visiblePupils();
   const c = counts(list);
   const className = currentClass === 'all' ? t('scope.all') : currentClass;
@@ -352,6 +354,7 @@ $('report').addEventListener('click', () => {
 });
 
 $('backup').addEventListener('click', () => {
+  if (!requirePro()) return;
   download('nabadat-backup-' + new Date().toISOString().slice(0, 10) + '.json', buildBackup(pupils), 'application/json;charset=utf-8');
   flash(t('msg.exported'), 'ok');
 });
@@ -601,14 +604,75 @@ function closeSettings() {
   if (dlg.close) dlg.close(); else dlg.removeAttribute('open');
 }
 
-$('settingsBtn').addEventListener('click', () => {
-  markSettings();
-  const dlg = $('settingsDialog');
-  if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
-});
+$('settingsBtn').addEventListener('click', openSettings);
 $('settingsClose').addEventListener('click', closeSettings);
 document.querySelectorAll('#langSeg button').forEach(b => b.addEventListener('click', () => setLanguage(b.dataset.lang)));
 document.querySelectorAll('#themeSeg button').forEach(b => b.addEventListener('click', () => applyTheme(b.dataset.theme)));
+
+
+// ===== التفعيل (يعمل في نسخة التوزيع المباشر فقط، أما نسخة Google Play فكل الميزات مفتوحة) =====
+const LICENSE_KEY = 'nabadatLicense';
+const LOCK_MODE = !!(window.AndroidDevice && window.AndroidDevice.lockMode && window.AndroidDevice.lockMode());
+let proActive = false;
+
+function deviceIdText() {
+  const raw = normDeviceId(window.AndroidDevice && window.AndroidDevice.deviceId ? window.AndroidDevice.deviceId() : '');
+  return raw.match(/.{1,4}/g) ? raw.match(/.{1,4}/g).join('-') : '';
+}
+
+function featureAllowed() { return !LOCK_MODE || proActive; }
+
+function renderLock() {
+  $('proBox').hidden = !LOCK_MODE;
+  $('proActive').style.display = proActive ? 'block' : 'none';
+  $('proForm').hidden = proActive;
+  $('proDeviceId').value = deviceIdText();
+  ['csv', 'report', 'backup'].forEach(id => $(id).classList.toggle('locked', !featureAllowed()));
+}
+
+function openSettings() {
+  markSettings();
+  renderLock();
+  const dlg = $('settingsDialog');
+  if (dlg.showModal) { if (!dlg.open) dlg.showModal(); } else dlg.setAttribute('open', '');
+}
+
+function requirePro() {
+  if (featureAllowed()) return true;
+  flash(t('lock.needPro'), 'err');
+  openSettings();
+  $('proBox').scrollIntoView();
+  return false;
+}
+
+async function checkSavedLicense() {
+  if (!LOCK_MODE) return;
+  let code = '';
+  try { code = localStorage.getItem(LICENSE_KEY) || ''; } catch (e) {}
+  proActive = code ? await verifyLicense(deviceIdText(), code) : false;
+  renderLock();
+}
+
+$('proActivate').addEventListener('click', async () => {
+  const code = $('proCode').value;
+  if (await verifyLicense(deviceIdText(), code)) {
+    proActive = true;
+    try { localStorage.setItem(LICENSE_KEY, code); } catch (e) {}
+    $('proCode').value = '';
+    renderLock();
+    flash(t('pro.ok'), 'ok');
+  } else {
+    flash(t('pro.bad'), 'err');
+  }
+});
+
+$('proCopy').addEventListener('click', () => {
+  const input = $('proDeviceId');
+  const done = () => flash(t('pro.copied'), 'ok');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(input.value).then(done, () => { input.select(); document.execCommand('copy'); done(); });
+  } else { input.select(); document.execCommand('copy'); done(); }
+});
 
 window.addEventListener('error', e => flash(t('msg.error', { e: e.message }), 'err'));
 
@@ -633,4 +697,6 @@ window.addEventListener('error', e => flash(t('msg.error', { e: e.message }), 'e
   renderSolo();
   tRender('');
   markSettings();
+  renderLock();
+  checkSavedLicense();
 })();

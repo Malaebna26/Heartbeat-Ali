@@ -16,6 +16,12 @@
   .seg button { flex:1; min-width:120px; padding:10px 14px; border:2px solid #dfe6e9; border-radius:12px; background:#fff; color:#2d3436; font-family:inherit; font-weight:700; font-size:1rem; cursor:pointer; }
   .seg button.active { background:linear-gradient(135deg,#e84393,#0984e3); border-color:transparent; color:#fff; }
   #settingsDialog { overflow:auto; }
+  .pro-box { border:2px solid #e84393; border-radius:14px; padding:4px 14px 14px; margin-top:14px; }
+  .pro-row { display:flex; gap:8px; }
+  .pro-row input { flex:1; min-width:0; }
+  #proCode { width:100%; padding:10px; border:2px solid #dfe6e9; border-radius:12px; font-family:monospace; font-size:.95rem; }
+  .btn.locked::before { content:'🔒 '; }
+
   header { text-align:center; color:#fff; margin-bottom:18px; }
   header h1 { font-size:2rem; font-weight:800; text-shadow:0 2px 10px rgba(0,0,0,.2); display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center; }
   header p { color:rgba(255,255,255,.92); margin-top:6px; font-weight:600; }
@@ -323,6 +329,27 @@
     <button type="button" data-theme="dark" data-i18n="settings.dark"></button>
   </div>
 
+  <div id="proBox" class="pro-box" hidden>
+    <h3 data-i18n="pro.title"></h3>
+    <p class="muted" style="font-size:.88rem; line-height:1.7" data-i18n="pro.help"></p>
+    <div id="proActive" class="msg ok show" hidden data-i18n="pro.active"></div>
+    <div id="proForm">
+      <div class="field">
+        <label for="proDeviceId" data-i18n="pro.deviceId"></label>
+        <div class="pro-row">
+          <input id="proDeviceId" type="text" readonly dir="ltr">
+          <button class="btn gray" id="proCopy" type="button" data-i18n="pro.copy"></button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="proCode" data-i18n="pro.code"></label>
+        <textarea id="proCode" rows="3" dir="ltr" autocapitalize="characters" autocomplete="off" spellcheck="false"></textarea>
+      </div>
+      <div class="preview-actions"><button class="btn green" id="proActivate" type="button" data-i18n="pro.activate"></button></div>
+      <p class="muted" style="font-size:.85rem; line-height:1.7; margin-top:10px" data-i18n="pro.contact"></p>
+    </div>
+  </div>
+
   <h3 style="margin-top:18px" data-i18n="adv.title"></h3>
   <div class="adv-body">
         <details class="sub">
@@ -351,6 +378,7 @@
 
 <script src="js/core.js"></script>
 <script src="js/parser.js"></script>
+<script src="js/license.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/app.js"></script>
 </body>

@@ -1,0 +1,32 @@
+name: توليد كود تفعيل
+
+on:
+  workflow_dispatch:
+    inputs:
+      device_id:
+        description: 'رقم جهاز المشتري (كما يظهر في الإعدادات)'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  make:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: توليد الكود
+        env:
+          DEVICE_ID: ${{ github.event.inputs.device_id }}
+          LICENSE_PRIVATE_KEY: ${{ secrets.LICENSE_PRIVATE_KEY }}
+        run: |
+          CODE=$(node tools/make-code.js)
+          {
+            echo "### كود التفعيل"
+            echo
+            echo '```'
+            echo "$CODE"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "تم توليد الكود، افتح ملخص التشغيل (Summary) لنسخه"

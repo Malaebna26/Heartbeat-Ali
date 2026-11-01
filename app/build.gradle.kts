@@ -24,6 +24,25 @@ android {
         versionName = "1.0.0"
     }
 
+    buildFeatures { buildConfig = true }
+
+    // نسختان من التطبيق نفسه:
+    //  play   : لـ Google Play، كل الميزات مفتوحة مجاناً (لا يُسمح بالدفع خارج Play مقابل ميزات داخل التطبيق).
+    //  direct : للتوزيع المباشر كملف APK، ميزات التصدير مقفلة حتى إدخال كود التفعيل.
+    flavorDimensions += "dist"
+    productFlavors {
+        create("play") {
+            dimension = "dist"
+            buildConfigField("boolean", "LOCK_MODE", "false")
+        }
+        create("direct") {
+            dimension = "dist"
+            applicationIdSuffix = ".direct"
+            versionNameSuffix = "-direct"
+            buildConfigField("boolean", "LOCK_MODE", "true")
+        }
+    }
+
     signingConfigs {
         create("release") {
             if (keystoreProps.containsKey("storeFile")) {

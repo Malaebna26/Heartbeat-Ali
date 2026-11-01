@@ -30,7 +30,7 @@ jobs:
       - name: فحص JavaScript والاختبارات
         run: |
           for f in app/src/main/assets/app/js/*.js; do node --check "$f"; done
-          node --test tests/core.test.js tests/parser.test.js
+          node --test tests/core.test.js tests/parser.test.js tests/license.test.js
           python3 - <<'PY'
           import re, pathlib
           files = ['app/src/main/assets/app/index.html'] + [str(f) for f in pathlib.Path('app/src/main/assets/app/js').glob('*.js')]
@@ -85,23 +85,28 @@ jobs:
             "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > keystore.properties
 
       - name: الفحص والاختبار (Lint)
-        run: gradle :app:lintRelease --no-daemon
+        run: gradle :app:lintPlayRelease --no-daemon
         continue-on-error: true
 
-      - name: بناء APK للتجربة (debug)
-        run: gradle :app:assembleDebug --no-daemon
+      - name: بناء APK للتجربة (نسخة Play، debug)
+        run: gradle :app:assemblePlayDebug --no-daemon
 
-      - name: بناء AAB للنشر (release)
-        run: gradle :app:bundleRelease --no-daemon
+      - name: بناء AAB لـ Google Play (نسخة مفتوحة)
+        run: gradle :app:bundlePlayRelease --no-daemon
+
+      - name: بناء APK للتوزيع المباشر (نسخة مقفلة بالتفعيل)
+        run: gradle :app:assembleDirectRelease --no-daemon
 
       - name: التحقق من عدم وجود صلاحية الإنترنت
         run: |
-          MANIFEST=$(find app/build/intermediates/merged_manifests/release -name AndroidManifest.xml | head -1)
-          test -n "$MANIFEST" || { echo 'لم يُعثر على المانيفست المدمج'; exit 1; }
-          echo "المانيفست: $MANIFEST"
-          if grep -q 'android.permission.INTERNET' "$MANIFEST"; then
-            echo 'خطأ: صلاحية INTERNET موجودة' && exit 1
-          fi
+          MANIFESTS=$(find app/build/intermediates/merged_manifests -path "*Release*" -name AndroidManifest.xml)
+          test -n "$MANIFESTS" || { echo 'لم يُعثر على المانيفست المدمج'; exit 1; }
+          for MANIFEST in $MANIFESTS; do
+            echo "المانيفست: $MANIFEST"
+            if grep -q 'android.permission.INTERNET' "$MANIFEST"; then
+              echo 'خطأ: صلاحية INTERNET موجودة' && exit 1
+            fi
+          done
           echo 'لا توجد صلاحية INTERNET'
 
       - name: نشر الملفات في Release (على الفرع الرئيسي فقط)
@@ -110,8 +115,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="build-${GITHUB_RUN_NUMBER}"
-          FILES=$(ls app/build/outputs/apk/debug/*.apk app/build/outputs/bundle/release/*.aab)
+          FILES=$(ls app/build/outputs/apk/play/debug/*.apk app/build/outputs/bundle/playRelease/*.aab app/build/outputs/apk/direct/release/*.apk)
           gh release create "$TAG" $FILES \
             --repo "$GITHUB_REPOSITORY" \
             --title "نبضات ربيع - بناء $GITHUB_RUN_NUMBER" \
-            --notes "بناء تلقائي من الكوميت $GITHUB_SHA. APK للتجربة، وAAB للنشر (يحتاج توقيعاً قبل الرفع على Play)."
+            --notes "بناء تلقائي من الكوميت $GITHUB_SHA. AAB لـ Play (مفتوح)، وAPK مباشر مقفل بالتفعيل، وAPK تجريبي."
