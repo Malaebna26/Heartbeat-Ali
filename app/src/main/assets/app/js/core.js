@@ -4,7 +4,9 @@
 const STORE_VERSION = 2;
 const BACKUP_APP = 'nabadat-rabie';
 const SAVEABLE = ['ok', 'follow', 'refer'];
-const PROTOCOLS = ['cooldown', 'abrupt'];
+// عتبة التعافي: انخفاض النبض في الدقيقة الأولى بعد النشاط ≤ 12 نبضة/د يُعتبر ضعيفاً.
+// المرجع: Cole وآخرون، NEJM 1999 (عتبة ≤ 12 للبالغين). عند الأصحاء من الأطفال المتوسط أعلى بكثير (نحو 38 ± 15 في دراسة Frontiers in Pediatrics 2019).
+const RECOVERY_DROP_MIN = 12;
 
 // حدود نبض الراحة حسب العمر (تقريبية، تحتاج مراجعة طبية قبل الاستعمال الرسمي)
 function restRange(age) { return age <= 12 ? [70, 120] : [60, 100]; }
@@ -42,7 +44,7 @@ function classify(p) {
   if (pre < lo || pre > hi) strong.push({ k: 'flag.rest', p: { v: pre, lo, hi } });
 
   const drop = post - rec;
-  const th = p.protocol === 'abrupt' ? 18 : 12;
+  const th = RECOVERY_DROP_MIN;
   if (drop <= th) weak.push({ k: 'flag.weak', p: { drop, th } });
 
   let status;
@@ -55,7 +57,7 @@ function classify(p) {
 function newPupil(name, g, dob, extra, cls) {
   return {
     name, g, dob, cls: cls || 'بدون قسم', age: ageFromDob(dob), ageEdited: false,
-    pre: '', post: '', rec: '', protocol: 'cooldown', symptoms: false, extra, history: []
+    pre: '', post: '', rec: '', symptoms: false, extra, history: []
   };
 }
 
@@ -66,9 +68,9 @@ function saveSession(p, now) {
   p.history.push({
     d: (now || new Date()).toISOString(),
     pre: p.pre, post: p.post, rec: p.rec,
-    protocol: p.protocol, symptoms: p.symptoms, status: r.status
+    symptoms: p.symptoms, status: r.status
   });
-  p.pre = ''; p.post = ''; p.rec = ''; p.symptoms = false; p.protocol = 'cooldown';
+  p.pre = ''; p.post = ''; p.rec = ''; p.symptoms = false;
   return { ok: true };
 }
 
@@ -93,7 +95,6 @@ function sanitizeSession(h) {
   return {
     d: cleanText(h.d, 40),
     pre: cleanMeasure(h.pre), post: cleanMeasure(h.post), rec: cleanMeasure(h.rec),
-    protocol: PROTOCOLS.includes(h.protocol) ? h.protocol : 'cooldown',
     symptoms: !!h.symptoms,
     status: ['ok', 'follow', 'refer', 'incomplete'].includes(h.status) ? h.status : ''
   };
@@ -112,7 +113,6 @@ function sanitizePupil(s) {
     cls: cleanText(s.cls, 100),
     age, ageEdited,
     pre: cleanMeasure(s.pre), post: cleanMeasure(s.post), rec: cleanMeasure(s.rec),
-    protocol: PROTOCOLS.includes(s.protocol) ? s.protocol : 'cooldown',
     symptoms: !!s.symptoms,
     extra: !!s.extra,
     history: Array.isArray(s.history) ? s.history.slice(0, 500).map(sanitizeSession).filter(Boolean) : []
@@ -140,7 +140,7 @@ function parseBackup(text) {
 
 if (typeof module !== 'undefined') {
   module.exports = {
-    STORE_VERSION, BACKUP_APP, restRange, num, ageFromDob, classify, newPupil,
+    STORE_VERSION, BACKUP_APP, RECOVERY_DROP_MIN, restRange, num, ageFromDob, classify, newPupil,
     saveSession, sanitizePupil, buildBackup, parseBackup, cleanMeasure, csvCell
   };
 }

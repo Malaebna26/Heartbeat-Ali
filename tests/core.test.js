@@ -8,7 +8,7 @@ const { classify, newPupil, saveSession, sanitizePupil, buildBackup, parseBackup
 function pupil(over) {
   return Object.assign({
     name: 'تلميذ', g: 'm', dob: '', cls: 'قسم', age: 11, ageEdited: true,
-    pre: '90', post: '150', rec: '120', protocol: 'cooldown', symptoms: false, extra: false, history: []
+    pre: '90', post: '150', rec: '120', symptoms: false, extra: false, history: []
   }, over);
 }
 
@@ -54,14 +54,14 @@ test('النبض بعد دقيقة أكبر من فور التوقف: غير م�
   assert.deepEqual(flagKeys(r), ['inc.order']);
 });
 
-test('حد التعافي: انخفاض 12 بالتهدئة ضعيف، و13 مقبول', () => {
+test('حد التعافي الموحّد: انخفاض 12 ضعيف، و13 مقبول', () => {
   assert.equal(classify(pupil({ post: '150', rec: '138' })).status, 'follow'); // 12 ≤ 12 ضعيف
   assert.equal(classify(pupil({ post: '150', rec: '137' })).status, 'ok');     // 13 > 12
 });
 
-test('حد التعافي بعد التوقف الفوري 18: انخفاض 18 ضعيف، و19 مقبول', () => {
-  assert.equal(classify(pupil({ protocol: 'abrupt', post: '150', rec: '132' })).status, 'follow');
-  assert.equal(classify(pupil({ protocol: 'abrupt', post: '150', rec: '131' })).status, 'ok');
+test('لا أثر لحقل protocol القديم: العتبة 12 دائماً', () => {
+  assert.equal(classify(pupil({ protocol: 'abrupt', post: '150', rec: '132' })).status, 'ok');     // انخفاض 18 مقبول
+  assert.equal(classify(pupil({ protocol: 'abrupt', post: '150', rec: '138' })).status, 'follow'); // انخفاض 12 ضعيف
 });
 
 test('نبض الراحة خارج الحدود لتلميذ 11 سنة (70–120)', () => {
@@ -98,16 +98,15 @@ test('saveSession: يرفض الجلسة الناقصة ولا يغيّر شيئ
 });
 
 test('saveSession: يحفظ الجلسة ثم يمسح القياسات الحالية فقط', () => {
-  const p = pupil({ name: 'أحمد', protocol: 'abrupt' });
+  const p = pupil({ name: 'أحمد' });
   const now = new Date('2026-10-29T10:00:00Z');
   assert.equal(saveSession(p, now).ok, true);
   assert.equal(p.history.length, 1);
   assert.deepEqual(p.history[0], {
     d: '2026-10-29T10:00:00.000Z', pre: '90', post: '150', rec: '120',
-    protocol: 'abrupt', symptoms: false, status: 'ok'
+    symptoms: false, status: 'ok'
   });
   assert.equal(p.pre, ''); assert.equal(p.post, ''); assert.equal(p.rec, '');
-  assert.equal(p.protocol, 'cooldown');
   assert.equal(p.name, 'أحمد', 'الاسم والعمر يبقيان');
   assert.equal(p.age, 11);
 });
@@ -129,7 +128,7 @@ test('sanitizePupil ينظّف القيم الخاطئة ولا يقبلها', (
   assert.equal(p.pre, '');            // 5 خارج المدى 20–300
   assert.equal(p.post, '150');
   assert.equal(p.rec, '');            // نص غير رقمي
-  assert.equal(p.protocol, 'cooldown');
+  assert.equal(p.protocol, undefined, 'الحقل القديم يُهمل');
   assert.equal(p.symptoms, true);     // قيمة صادقة تُحوَّل إلى true
   assert.deepEqual(p.history, []);
   assert.equal(p.age, ageFromDob('2015-01-01'));
@@ -166,7 +165,7 @@ test('newPupil يضبط الحقول الافتراضية والسجل الفا�
   const p = newPupil('ع', 'f', '2014-05-05', false, 'قسم 2');
   assert.equal(p.cls, 'قسم 2');
   assert.deepEqual(p.history, []);
-  assert.equal(p.protocol, 'cooldown');
+  assert.equal(p.protocol, undefined);
   assert.equal(p.g, 'f');
 });
 
@@ -179,4 +178,10 @@ test('csvCell يمنع حقن الصيغ ويهرّب علامات الاقتب�
   assert.equal(csvCell('علي "أ"'), '"علي ""أ"""');
   assert.equal(csvCell(null), '""');
   assert.equal(csvCell(72), '"72"');
+});
+
+test('تعافٍ قوي: انخفاض أكبر من 12 لا يُنتج مؤشراً', () => {
+  const r = classify(pupil({ pre: '80', post: '170', rec: '120' }));
+  assert.equal(r.status, 'ok');
+  assert.deepEqual(r.flags, []);
 });

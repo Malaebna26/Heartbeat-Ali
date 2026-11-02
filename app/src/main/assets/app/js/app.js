@@ -34,7 +34,6 @@ function setLanguage(l) {
 function statusText(s) { return t('status.' + s); }
 function flagText(f) { return t(f.k, f.p); }
 function genderText(g) { return g === 'm' ? t('gender.m') : g === 'f' ? t('gender.f') : ''; }
-function protocolText(p) { return p === 'abrupt' ? t('protocol.abrupt') : t('protocol.cooldown'); }
 
 // ===== التخزين =====
 function save() {
@@ -83,10 +82,6 @@ function rowHtml(p, i) {
     <td><input type="number" data-f="pre" min="30" max="200" value="${p.pre}"></td>
     <td><input type="number" data-f="post" min="30" max="240" value="${p.post}"></td>
     <td><input type="number" data-f="rec" min="30" max="240" value="${p.rec}"></td>
-    <td><select data-f="protocol">
-      <option value="cooldown" ${p.protocol !== 'abrupt' ? 'selected' : ''}>${esc(t('protocol.cooldown'))}</option>
-      <option value="abrupt" ${p.protocol === 'abrupt' ? 'selected' : ''}>${esc(t('protocol.abrupt'))}</option>
-    </select></td>
     <td><input type="checkbox" data-f="symptoms" ${p.symptoms ? 'checked' : ''}></td>
     <td class="res"></td>
     <td class="acts">
@@ -161,7 +156,6 @@ function onChange(e) {
   if (!p) return;
 
   if (f === 'symptoms') p.symptoms = el.checked;
-  else if (f === 'protocol') p.protocol = el.value;
   else if (f === 'age') p.age = el.value === '' ? null : Number(el.value);
   else if (f === 'name') p.name = el.value;
   else p[f] = el.value;
@@ -281,7 +275,7 @@ function chartDrop(h) {
   let bars = '';
   drops.forEach((d, k) => {
     if (d === null) return;
-    const th = h[k].protocol === 'abrupt' ? 18 : 12;
+    const th = RECOVERY_DROP_MIN;
     const color = d > th ? '#00b894' : '#f0932b';
     const x = chartX(k, n) - barW / 2;
     const hgt = Math.max(0, d * scale);
@@ -336,7 +330,6 @@ $('csv').addEventListener('click', () => {
     const r = classify(p);
     return [
       p.cls, p.name, genderText(p.g), (p.age == null ? '' : p.age), p.pre, p.post, p.rec,
-      p.protocol === 'abrupt' ? t('csv.abrupt') : t('csv.cooldown'),
       p.symptoms ? t('csv.yes') : t('csv.no'),
       r.status ? statusText(r.status) : '',
       r.flags.map(flagText).join(' | '),
@@ -399,7 +392,7 @@ function scopeName() { return currentClass === 'all' ? t('scope.all') : currentC
 
 $('clear').addEventListener('click', () => {
   if (!confirm(t('confirm.clear', { s: scopeName() }))) return;
-  visiblePupils().forEach(p => { p.pre = ''; p.post = ''; p.rec = ''; p.symptoms = false; p.protocol = 'cooldown'; });
+  visiblePupils().forEach(p => { p.pre = ''; p.post = ''; p.rec = ''; p.symptoms = false; });
   renderAll();
 });
 
@@ -587,7 +580,7 @@ function readSolo() {
     name: $('sName').value.trim(), g: $('sGender').value, cls: '',
     age: $('sAge').value === '' ? null : Number($('sAge').value), ageEdited: true,
     pre: $('sPre').value, post: $('sPost').value, rec: $('sRec').value,
-    protocol: $('sProtocol').value, symptoms: $('sSymptoms').checked
+    symptoms: $('sSymptoms').checked
   };
 }
 
@@ -596,13 +589,12 @@ function renderSolo() {
   $('soloResult').innerHTML = r.status ? resultHtml(r) : `<span class="badge none">—</span><div class="flags">${esc(t('solo.empty'))}</div>`;
 }
 
-['sName', 'sGender', 'sAge', 'sPre', 'sPost', 'sRec', 'sProtocol', 'sSymptoms'].forEach(id =>
+['sName', 'sGender', 'sAge', 'sPre', 'sPost', 'sRec', 'sSymptoms'].forEach(id =>
   $(id).addEventListener('input', renderSolo));
-$('sProtocol').addEventListener('change', renderSolo);
 $('sSymptoms').addEventListener('change', renderSolo);
 $('sClear').addEventListener('click', () => {
   ['sName', 'sAge', 'sPre', 'sPost', 'sRec'].forEach(id => { $(id).value = ''; });
-  $('sGender').value = ''; $('sProtocol').value = 'cooldown'; $('sSymptoms').checked = false;
+  $('sGender').value = ''; $('sSymptoms').checked = false;
   renderSolo();
 });
 
