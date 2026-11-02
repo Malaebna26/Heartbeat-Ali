@@ -4,9 +4,9 @@
 const STORE_VERSION = 2;
 const BACKUP_APP = 'nabadat-rabie';
 const SAVEABLE = ['ok', 'follow', 'refer'];
-// عتبة التعافي: انخفاض النبض في الدقيقة الأولى بعد النشاط ≤ 12 نبضة/د يُعتبر ضعيفاً.
-// المرجع: Cole وآخرون، NEJM 1999 (عتبة ≤ 12 للبالغين). عند الأصحاء من الأطفال المتوسط أعلى بكثير (نحو 38 ± 15 في دراسة Frontiers in Pediatrics 2019).
-const RECOVERY_DROP_MIN = 12;
+// الحد الأعلى المتوقع للنبض بعد النشاط = 220 − العمر. الدراسات على الأطفال تجد أن هذه المعادلة تبالغ في تقدير النبض الأقصى المقيس،
+// فتجاوزها يعني قياساً غير معتاد أو خطأ في العدّ (متوسط الذروة عند أطفال أصحاء ≈ 189 ± 8، Frontiers in Pediatrics 2019).
+const maxHrFor = age => 220 - Number(age);
 
 // حدود نبض الراحة حسب العمر (تقريبية، تحتاج مراجعة طبية قبل الاستعمال الرسمي)
 function restRange(age) { return age <= 12 ? [70, 120] : [60, 100]; }
@@ -30,34 +30,30 @@ function ageFromDob(dob, today) {
 
 // التصنيف: ok = طبيعي، follow = متابعة، refer = إحالة، incomplete = بيانات ناقصة
 function classify(p) {
-  const anyValue = p.pre !== '' || p.post !== '' || p.rec !== '' || p.symptoms;
+  const anyValue = p.pre !== '' || p.post !== '' || p.symptoms;
   if (!anyValue) return { status: null, flags: [] };
   if (p.symptoms) return { status: 'refer', flags: [{ k: 'flag.symptoms' }] };
 
-  const pre = num(p.pre), post = num(p.post), rec = num(p.rec);
-  if (pre === null || post === null || rec === null) return { status: 'incomplete', flags: [{ k: 'inc.three' }] };
+  const pre = num(p.pre), post = num(p.post);
+  if (pre === null || post === null) return { status: 'incomplete', flags: [{ k: 'inc.two' }] };
   if (p.age === null || p.age === '' || p.age === undefined) return { status: 'incomplete', flags: [{ k: 'inc.age' }] };
-  if (rec > post) return { status: 'incomplete', flags: [{ k: 'inc.order' }] };
+  if (post < pre) return { status: 'incomplete', flags: [{ k: 'inc.order' }] };
 
-  const strong = [], weak = [];
+  const flags = [];
   const [lo, hi] = restRange(Number(p.age));
-  if (pre < lo || pre > hi) strong.push({ k: 'flag.rest', p: { v: pre, lo, hi } });
+  if (pre < lo || pre > hi) flags.push({ k: 'flag.rest', p: { v: pre, lo, hi } });
+  const max = maxHrFor(p.age);
+  if (post > max) flags.push({ k: 'flag.high', p: { v: post, max } });
 
-  const drop = post - rec;
-  const th = RECOVERY_DROP_MIN;
-  if (drop <= th) weak.push({ k: 'flag.weak', p: { drop, th } });
-
-  let status;
-  if (strong.length && weak.length) status = 'refer';
-  else if (strong.length || weak.length) status = 'follow';
-  else status = 'ok';
-  return { status, flags: [...strong, ...weak] };
+  // مؤشر واحد = متابعة، مؤشران = إحالة
+  const status = flags.length >= 2 ? 'refer' : flags.length === 1 ? 'follow' : 'ok';
+  return { status, flags };
 }
 
 function newPupil(name, g, dob, extra, cls) {
   return {
     name, g, dob, cls: cls || 'بدون قسم', age: ageFromDob(dob), ageEdited: false,
-    pre: '', post: '', rec: '', symptoms: false, extra, history: []
+    pre: '', post: '', symptoms: false, extra, history: []
   };
 }
 
@@ -67,10 +63,10 @@ function saveSession(p, now) {
   if (!SAVEABLE.includes(r.status)) return { ok: false };
   p.history.push({
     d: (now || new Date()).toISOString(),
-    pre: p.pre, post: p.post, rec: p.rec,
+    pre: p.pre, post: p.post,
     symptoms: p.symptoms, status: r.status
   });
-  p.pre = ''; p.post = ''; p.rec = ''; p.symptoms = false;
+  p.pre = ''; p.post = ''; p.symptoms = false;
   return { ok: true };
 }
 
@@ -94,7 +90,7 @@ function sanitizeSession(h) {
   if (!h || typeof h !== 'object' || typeof h.d !== 'string') return null;
   return {
     d: cleanText(h.d, 40),
-    pre: cleanMeasure(h.pre), post: cleanMeasure(h.post), rec: cleanMeasure(h.rec),
+    pre: cleanMeasure(h.pre), post: cleanMeasure(h.post),
     symptoms: !!h.symptoms,
     status: ['ok', 'follow', 'refer', 'incomplete'].includes(h.status) ? h.status : ''
   };
@@ -112,7 +108,7 @@ function sanitizePupil(s) {
     dob,
     cls: cleanText(s.cls, 100),
     age, ageEdited,
-    pre: cleanMeasure(s.pre), post: cleanMeasure(s.post), rec: cleanMeasure(s.rec),
+    pre: cleanMeasure(s.pre), post: cleanMeasure(s.post),
     symptoms: !!s.symptoms,
     extra: !!s.extra,
     history: Array.isArray(s.history) ? s.history.slice(0, 500).map(sanitizeSession).filter(Boolean) : []
@@ -140,7 +136,7 @@ function parseBackup(text) {
 
 if (typeof module !== 'undefined') {
   module.exports = {
-    STORE_VERSION, BACKUP_APP, RECOVERY_DROP_MIN, restRange, num, ageFromDob, classify, newPupil,
+    STORE_VERSION, BACKUP_APP, maxHrFor, restRange, num, ageFromDob, classify, newPupil,
     saveSession, sanitizePupil, buildBackup, parseBackup, cleanMeasure, csvCell
   };
 }

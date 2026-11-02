@@ -71,7 +71,7 @@ keytool -genkeypair -v -keystore release-key.jks -alias nabadat-release -keyalg 
 - استيراد قوائم التلاميذ من ملف Excel أو CSV، مع فصل كل قسم عن الآخر.
 - إدخال القياسات في الجدول ونتيجة فورية لكل تلميذ.
 - عداد دقيقة مدمج بتنبيه صوتي واهتزاز.
-- سجل لكل تلميذ مع رسوم بيانية لتطور النبض والتعافي عبر الجلسات.
+- سجل لكل تلميذ مع رسوم بيانية لتطور النبض عبر الجلسات.
 - تقرير للقسم يمكن حفظه PDF، وتصدير النتائج CSV.
 - نسخ احتياطي واستعادة من ملف.
 - فحص فردي لشخص واحد دون قائمة.
@@ -89,7 +89,7 @@ Nabadat Rabie aide les enseignants à noter le pouls des élèves avant et aprè
 - Import des listes d'élèves depuis Excel ou CSV, chaque classe séparée.
 - Saisie des mesures dans un tableau avec résultat immédiat.
 - Minuterie d'une minute avec alerte sonore et vibration.
-- Historique par élève avec graphiques d'évolution du pouls et de la récupération.
+- Historique par élève avec graphiques d'évolution du pouls.
 - Rapport de classe enregistrable en PDF, export CSV.
 - Sauvegarde et restauration depuis un fichier.
 - Test individuel pour une seule personne.
@@ -106,7 +106,7 @@ Avertissement : cette application n'est pas un dispositif médical et ne diagnos
 ## 8. تنبيهات قانونية مهمة
 - التطبيق يعالج بيانات **قاصرين** (أسماء وتواريخ ميلاد وقياسات). في الجزائر ينظم القانون 18-07 المتعلق بحماية الأشخاص الطبيعيين في معالجة المعطيات ذات الطابع الشخصي هذا النوع من المعالجة. تحقق من متطلباتك مع مختص قبل النشر أو الاستعمال في مؤسسة.
 - التطبيق لا يحفظ بيانات على خوادم، لكن المعلم مسؤول عن الجهاز وعن ملف CSV الذي يصدّره.
-- العتبات المستعملة (نبض الراحة والتعافي) تقديرية، ويجب أن يعتمدها طبيب مختص قبل أي استعمال رسمي.
+- العتبات المستعملة (نبض الراحة والنبض بعد النشاط) تقديرية، ويجب أن يعتمدها طبيب مختص قبل أي استعمال رسمي.
 
 ## ملاحظة: النسختان (play / direct) والتفعيل
 

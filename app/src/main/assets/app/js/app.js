@@ -81,7 +81,6 @@ function rowHtml(p, i) {
     <td><input type="number" data-f="age" min="6" max="18" value="${p.age == null ? '' : p.age}"></td>
     <td><input type="number" data-f="pre" min="30" max="200" value="${p.pre}"></td>
     <td><input type="number" data-f="post" min="30" max="240" value="${p.post}"></td>
-    <td><input type="number" data-f="rec" min="30" max="240" value="${p.rec}"></td>
     <td><input type="checkbox" data-f="symptoms" ${p.symptoms ? 'checked' : ''}></td>
     <td class="res"></td>
     <td class="acts">
@@ -129,7 +128,7 @@ function renderClassFilter() {
 function renderAll() {
   renderClassFilter();
   if (pupils.length === 0) {
-    $('rows').innerHTML = `<tr><td class="empty" colspan="12"><div class="empty-box">${esc(t('row.empty'))}</div></td></tr>`;
+    $('rows').innerHTML = `<tr><td class="empty" colspan="10"><div class="empty-box">${esc(t('row.empty'))}</div></td></tr>`;
   } else {
     $('rows').innerHTML = pupils.map((p, i) => rowHtml(p, i)).join('');
     pupils.forEach((_, i) => refreshRow(i));
@@ -242,7 +241,7 @@ function fmtDateShort(iso) {
   return d.toLocaleDateString(LANG === 'fr' ? 'fr-FR' : 'ar-u-nu-latn', { month: '2-digit', day: '2-digit' });
 }
 
-const CH = { W: 560, H: 220, P: 34, MIN: 40, MAX: 200 };
+const CH = { W: 560, H: 220, P: 34, MIN: 40, MAX: 220 };
 
 function chartX(k, n) { return CH.P + (n <= 1 ? (CH.W - 2 * CH.P) / 2 : k * (CH.W - 2 * CH.P) / (n - 1)); }
 function chartY(v) { return CH.P + (CH.MAX - v) / (CH.MAX - CH.MIN) * (CH.H - 2 * CH.P); }
@@ -250,11 +249,11 @@ function chartY(v) { return CH.P + (CH.MAX - v) / (CH.MAX - CH.MIN) * (CH.H - 2 
 function chartBpm(h) {
   const n = h.length;
   let grid = '';
-  [60, 100, 140, 180].forEach(v => {
+  [60, 100, 140, 180, 220].forEach(v => {
     grid += `<line x1="${CH.P}" x2="${CH.W - CH.P}" y1="${chartY(v)}" y2="${chartY(v)}" stroke="rgba(128,128,128,.3)"/>` +
       `<text x="${CH.P - 6}" y="${chartY(v) + 4}" font-size="11" text-anchor="end" fill="#8b95a5">${v}</text>`;
   });
-  const series = [['pre', '#636e72'], ['post', '#e84393'], ['rec', '#0984e3']];
+  const series = [['pre', '#636e72'], ['post', '#e84393']];
   let lines = '';
   series.forEach(([key, color]) => {
     const pts = h.map((s, k) => (s[key] === '' ? null : [chartX(k, n), chartY(Number(s[key]))])).filter(Boolean);
@@ -263,30 +262,6 @@ function chartBpm(h) {
   });
   const labels = h.map((s, k) => `<text x="${chartX(k, n)}" y="${CH.H - 8}" font-size="11" text-anchor="middle" fill="#8b95a5">${k + 1}</text>`).join('');
   return `<svg viewBox="0 0 ${CH.W} ${CH.H}" width="100%" role="img">${grid}${lines}${labels}</svg>`;
-}
-
-function chartDrop(h) {
-  const n = h.length;
-  const drops = h.map(s => (s.post === '' || s.rec === '' ? null : Number(s.post) - Number(s.rec)));
-  const maxDrop = Math.max(30, ...drops.filter(d => d !== null));
-  const base = CH.H - CH.P;
-  const scale = (CH.H - 2 * CH.P) / maxDrop;
-  const barW = Math.max(12, Math.min(40, (CH.W - 2 * CH.P) / Math.max(n, 1) * 0.6));
-  let bars = '';
-  drops.forEach((d, k) => {
-    if (d === null) return;
-    const th = RECOVERY_DROP_MIN;
-    const color = d > th ? '#00b894' : '#f0932b';
-    const x = chartX(k, n) - barW / 2;
-    const hgt = Math.max(0, d * scale);
-    bars += `<rect x="${x}" y="${base - hgt}" width="${barW}" height="${hgt}" rx="4" fill="${color}"/>` +
-      `<text x="${chartX(k, n)}" y="${base - hgt - 4}" font-size="11" text-anchor="middle" fill="currentColor">${d}</text>`;
-  });
-  const th12 = base - 12 * scale;
-  const thLine = `<line x1="${CH.P}" x2="${CH.W - CH.P}" y1="${th12}" y2="${th12}" stroke="#d63031" stroke-dasharray="5 4"/>` +
-    `<text x="${CH.W / 2}" y="14" font-size="11" text-anchor="middle" fill="#d63031">- - - ${esc(t('hist.threshold'))}</text>`;
-  const labels = h.map((s, k) => `<text x="${chartX(k, n)}" y="${CH.H - 8}" font-size="11" text-anchor="middle" fill="#8b95a5">${k + 1}</text>`).join('');
-  return `<svg viewBox="0 0 ${CH.W} ${CH.H}" width="100%" role="img">${thLine}${bars}${labels}</svg>`;
 }
 
 function openHistory(i) {
@@ -299,10 +274,9 @@ function openHistory(i) {
     html = `<p class="hist-none">${esc(t('hist.none'))}</p>`;
   } else {
     html = `<div class="chart-box"><h3>${esc(t('hist.chart1'))}</h3>${chartBpm(h)}<div class="legend">${esc(t('hist.legend'))}</div></div>` +
-      `<div class="chart-box"><h3>${esc(t('hist.chart2'))}</h3>${chartDrop(h)}</div>` +
       `<div class="hist-scroll"><table class="hist-table"><thead><tr><th>#</th><th>${esc(t('hist.date'))}</th>` +
-      `<th>${esc(t('th.pre'))}</th><th>${esc(t('th.post'))}</th><th>${esc(t('th.rec'))}</th><th>${esc(t('hist.status'))}</th></tr></thead><tbody>` +
-      h.map((s, k) => `<tr><td>${k + 1}</td><td title="${esc(fmtDate(s.d))}">${esc(fmtDateShort(s.d))}</td><td>${s.pre}</td><td>${s.post}</td><td>${s.rec}</td><td>${s.status ? `<span class="badge ${s.status}">${esc(statusText(s.status))}</span>` : ''}</td></tr>`).join('') +
+      `<th>${esc(t('th.pre'))}</th><th>${esc(t('th.post'))}</th><th>${esc(t('hist.status'))}</th></tr></thead><tbody>` +
+      h.map((s, k) => `<tr><td>${k + 1}</td><td title="${esc(fmtDate(s.d))}">${esc(fmtDateShort(s.d))}</td><td>${s.pre}</td><td>${s.post}</td><td>${s.status ? `<span class="badge ${s.status}">${esc(statusText(s.status))}</span>` : ''}</td></tr>`).join('') +
       '</tbody></table></div>';
   }
   $('histBody').innerHTML = html;
@@ -329,7 +303,7 @@ $('csv').addEventListener('click', () => {
   const lines = visiblePupils().map(p => {
     const r = classify(p);
     return [
-      p.cls, p.name, genderText(p.g), (p.age == null ? '' : p.age), p.pre, p.post, p.rec,
+      p.cls, p.name, genderText(p.g), (p.age == null ? '' : p.age), p.pre, p.post,
       p.symptoms ? t('csv.yes') : t('csv.no'),
       r.status ? statusText(r.status) : '',
       r.flags.map(flagText).join(' | '),
@@ -349,7 +323,7 @@ $('report').addEventListener('click', () => {
   const rows = list.map((p, i) => {
     const r = classify(p);
     return `<tr><td>${i + 1}</td><td>${esc(p.cls)}</td><td>${esc(p.name)}</td><td>${esc(genderText(p.g))}</td>` +
-      `<td>${p.age == null ? '' : p.age}</td><td>${p.pre}</td><td>${p.post}</td><td>${p.rec}</td>` +
+      `<td>${p.age == null ? '' : p.age}</td><td>${p.pre}</td><td>${p.post}</td>` +
       `<td>${esc(r.status ? statusText(r.status) : '')}</td><td>${esc(r.flags.map(flagText).join(' | '))}</td></tr>`;
   }).join('');
   $('printReport').innerHTML =
@@ -357,7 +331,7 @@ $('report').addEventListener('click', () => {
     `<p>${esc(t('report.class', { s: className }))} — ${esc(t('report.date', { d: new Date().toLocaleDateString(LANG === 'fr' ? 'fr-FR' : 'ar-u-nu-latn') }))}</p>` +
     `<p>${esc(t('report.counts', { t: c.total, done: c.done, ok: c.ok, follow: c.follow, refer: c.refer }))}</p>` +
     `<table><thead><tr><th>#</th><th>${esc(t('th.class'))}</th><th>${esc(t('th.name'))}</th><th>${esc(t('th.gender'))}</th>` +
-    `<th>${esc(t('th.age'))}</th><th>${esc(t('th.pre'))}</th><th>${esc(t('th.post'))}</th><th>${esc(t('th.rec'))}</th>` +
+    `<th>${esc(t('th.age'))}</th><th>${esc(t('th.pre'))}</th><th>${esc(t('th.post'))}</th>` +
     `<th>${esc(t('th.result'))}</th><th>${esc(t('th.symptoms'))}</th></tr></thead><tbody>${rows}</tbody></table>` +
     `<p class="report-foot">${esc(t('report.footer'))}</p>`;
   // داخل تطبيق أندرويد: نافذة الطباعة النظامية (حفظ PDF). في المتصفح: window.print()
@@ -392,7 +366,7 @@ function scopeName() { return currentClass === 'all' ? t('scope.all') : currentC
 
 $('clear').addEventListener('click', () => {
   if (!confirm(t('confirm.clear', { s: scopeName() }))) return;
-  visiblePupils().forEach(p => { p.pre = ''; p.post = ''; p.rec = ''; p.symptoms = false; });
+  visiblePupils().forEach(p => { p.pre = ''; p.post = ''; p.symptoms = false; });
   renderAll();
 });
 
@@ -421,7 +395,7 @@ function showMsg(text, kind) {
 }
 
 function hasMeasurement(p) {
-  return p.pre !== '' || p.post !== '' || p.rec !== '' || p.symptoms || p.history.length > 0;
+  return p.pre !== '' || p.post !== '' || p.symptoms || p.history.length > 0;
 }
 
 // كل قسم مستقل: لا يُستبدل إلا القسم الذي يُستورد بالاسم نفسه
@@ -579,7 +553,7 @@ function readSolo() {
   return {
     name: $('sName').value.trim(), g: $('sGender').value, cls: '',
     age: $('sAge').value === '' ? null : Number($('sAge').value), ageEdited: true,
-    pre: $('sPre').value, post: $('sPost').value, rec: $('sRec').value,
+    pre: $('sPre').value, post: $('sPost').value,
     symptoms: $('sSymptoms').checked
   };
 }
@@ -589,11 +563,11 @@ function renderSolo() {
   $('soloResult').innerHTML = r.status ? resultHtml(r) : `<span class="badge none">—</span><div class="flags">${esc(t('solo.empty'))}</div>`;
 }
 
-['sName', 'sGender', 'sAge', 'sPre', 'sPost', 'sRec', 'sSymptoms'].forEach(id =>
+['sName', 'sGender', 'sAge', 'sPre', 'sPost', 'sSymptoms'].forEach(id =>
   $(id).addEventListener('input', renderSolo));
 $('sSymptoms').addEventListener('change', renderSolo);
 $('sClear').addEventListener('click', () => {
-  ['sName', 'sAge', 'sPre', 'sPost', 'sRec'].forEach(id => { $(id).value = ''; });
+  ['sName', 'sAge', 'sPre', 'sPost'].forEach(id => { $(id).value = ''; });
   $('sGender').value = ''; $('sSymptoms').checked = false;
   renderSolo();
 });
